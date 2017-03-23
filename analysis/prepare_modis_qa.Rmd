@@ -1,0 +1,259 @@
+---
+title: "Quality Assessment of MODIS IV data"
+author: "AJ Perez-Luque (@ajpelu)"
+date: "2017 March"
+output:  
+  md_document:
+    variant: markdown_github
+---
+  
+  
+```{r wd, echo=FALSE}
+#---------------------------------
+# machine <- 'ajpelu'
+machine <- 'ajpeluLap'
+di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
+#---------------------------------
+```
+
+```{r packages, warning=FALSE, message=FALSE}
+library("tidyverse")
+library("knitr")
+
+# source(paste0(di,"/R/getComposite.R"))
+```
+
+
+```{r}
+# Read data
+rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= ""), header = TRUE, sep = ',')
+```
+
+
+## Prepare Data
+
+# 1 # Date 
+# * Get date of the image (from hdf title, system.index). 
+# * Store as date (date format) and create new variable for year 
+# 2 # Coordinates
+# * Get lat and long from '.geo' variable 
+# * Store as numeric 
+# 3 # Select and rename variables of interest 
+
+
+```{r}
+raw <- rawdata %>% 
+  mutate(
+    # Date
+    date = as.Date(substr(system.index,1,10), format = "%Y_%m_%d"),
+    # date2 = as.Date(substr(system.index,1,10), format = "%Y_%m_%d"),
+    year = lubridate::year(date), 
+    
+    # GEE index
+    gee_index = stringr::str_replace(
+      substr(system.index,22, nchar(as.character(system.index))),
+    pattern = '_', "")) %>% 
+    # test = ifelse(date == date2, 0, 1))
+  dplyr::select(doy = DayOfYear, evi = EVI, ndvi = NDVI, summQA = SummaryQA, iv_malla_modi_id,
+                pop, date, year, gee_index, lat, long, 
+                qa_quality, qa_use, qa_aerosol, qa_adj_cloud, 
+                qa_atmos, qa_mix_cloud, qa_landwater, qa_snow, qa_shadow)
+```
+    
+
+
+
+aa2
+## Some metadata of the time series 
+### Temporal range of the Time series 
+```{r}
+# Get temporal range of the data
+# Start date
+unique(min(as.Date(raw$date)))
+
+# End date 
+unique(max(as.Date(raw$date)))
+```
+
+
+
+
+
+## Read and prepare evi data
+
+We created three datasets: 
+
+* annual and seasonal evi by pixel (output as `./data/evi_atributes_all.csv`)
+* annual and seasonal ndvi by pixel (output as `./data/ndvi_atributes_all.csv`)
+* iv by pixel and by composite (output as `./data/iv_composite.csv`)
+
+The first two dataframes have the following fields: 
+
+* `iv_malla_modi_id`: the identifier of the modis cell
+* `year`
+* `evi` or `ndvi`: the value of the EVI (or NDVI) (cumulative value for each season)
+* `season`: the season of cumulative evi:
+  * `0` annual value
+  * `1` spring value
+  * `2` summer value 
+  * `3` autumn value 
+  * `4` winter value 
+* `seasonF`: the season coded as factor 
+* `long`: longitude coordinates
+* `lat`: latitute coordinates 
+* `pop`: numeric code of the *Q. pyrenaica* population 
+
+The iv_composite dataframe has the following fields: 
+
+* `evi` or `ndvi`: value of IV for the date 
+* `date`: date of adquisition of the image
+* `composite`: number of composite (23 by year)
+* `iv_malla_modi_id`, `year`, `lat`, `long`, `pop`, `seasonF` 
+
+
+### QA
+```{r}
+# See n of images per year and per pixel 
+n_images_pixel <- raw %>% 
+  mutate(year = lubridate::year(date)) %>% 
+  group_by(year) %>%
+  summarise(n = n(),
+            n_pixel = n()/length(unique(iv_malla_modi_id)))
+
+kable(n_images_pixel)
+```
+
+#### Summary table of layer summaryQA 
+```{r}
+# Table of QA
+rawdata %>% group_by(summQA) %>% 
+  summarise(npixels = n()) %>% 
+  mutate(freq = round((npixels / sum(npixels)*100),2),
+         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy")))
+```
+  
+* Explore Quality by date 
+
+```{r, message=FALSE}
+qdate <- rawdata %>% 
+  group_by(date, summQA) %>% 
+  count(date, summQA) %>% 
+  mutate(freq = round((n / sum(n))*100, 2),
+         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) 
+
+
+qdate %>% 
+  ggplot(aes(x=as.Date(date), y=freq, fill=QA)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+#  facet_wrap(~QA, ncol=1) + 
+  theme_bw() +
+  scale_x_date(date_labels = "%Y %d")
+  
+
+```
+
+
+
+
+
+
+
+
+
+## Prepare data 
+### Get the composite of the images and the season
+* See [Testa et al. 2014](https://www.researchgate.net/publication/262566793_Correcting_MODIS_16-day_composite_NDVI_time-series_with_actual_acquisition_dates)
+* Use a [custom function](/R/getComposite.R)
+
+```{r}
+# Get leap years 
+years <- unique(rawdata$year)
+ly <- years[leap_year(years)]
+
+# Two functions 
+rd <- rawdata %>% 
+  mutate(m= lubridate::month(date),
+         d= lubridate::day(date)) %>% 
+  mutate(composite = ifelse(year %in% ly, 
+                            getComposite_leap(m,d),
+                            getComposite_nonleap(m,d))) %>% 
+  mutate(season = ifelse(composite < 6, 'winter',
+                   ifelse(composite < 12, 'spring',
+                    ifelse(composite < 18, 'summer','autumn'))))
+```
+
+### Scale factor of the NDVI and EVI data 
+```{r}
+# Apply scale factor https://lpdaac.usgs.gov/dataset_discovery/modis/modis_products_table/mod13q1 
+rd <- rd %>% 
+  mutate(evi = evi * 0.0001,
+         ndvi = ndvi * 0.0001) 
+```
+
+### Create dataframe with composites
+```{r}
+iv_composite <- rd %>% 
+  dplyr::select(iv_malla_modi_id, evi, ndvi,pop, date, year, long, lat, composite, seasonF = season)
+```
+
+### Create seasonal dataframes of EVI and NDVI 
+* EVI
+```{r}
+# Create annual evi by pixel 
+evi_annual <- rd %>% 
+  group_by(iv_malla_modi_id, year) %>%
+  summarise(evi = sum(evi[evi >=0])) %>%
+  mutate(seasonF='annual', 
+         season = 0)
+
+# Create seasonal evi by pixel 
+evi_season <- rd %>% 
+  group_by(iv_malla_modi_id, year, season) %>%
+  summarise(evi = sum(evi[evi >=0])) %>% 
+  mutate(seasonF = season) %>% 
+  mutate(season = ifelse(season == 'autumn', 3, 
+                   ifelse(season == 'winter', 4, 
+                    ifelse(season == 'spring', 1,2))))
+
+evidf <- rbind(evi_annual, evi_season)
+
+# Add coordinates and pob 
+aux_rd <- rd %>% dplyr::select(iv_malla_modi_id, long, lat, pop) %>%
+  group_by(iv_malla_modi_id) %>% unique()
+
+
+# Join dataframes 
+evidf <- evidf %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id") 
+```
+
+* NDVI 
+```{r}
+# Create annual ndvi by pixel 
+ndvi_annual <- rd %>% 
+  group_by(iv_malla_modi_id, year) %>%
+  summarise(ndvi = sum(ndvi[ndvi >=0])) %>%
+  mutate(seasonF='annual', 
+         season = 0)
+
+# Create seasonal ndvi by pixel 
+ndvi_season <- rd %>% 
+  group_by(iv_malla_modi_id, year, season) %>%
+  summarise(ndvi = sum(ndvi[ndvi >=0])) %>% 
+  mutate(seasonF = season) %>% 
+  mutate(season = ifelse(season == 'autumn', 3, 
+                   ifelse(season == 'winter', 4, 
+                    ifelse(season == 'spring', 1,2))))
+
+ndvidf <- rbind(ndvi_annual, ndvi_season)
+
+# Join dataframes 
+ndvidf <- ndvidf %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id")
+```
+
+### Export dataframes
+```{r}
+# Export dataframes 
+write.csv(evidf, file=paste(di, "/data/evi_atributes_all.csv", sep=""), row.names = FALSE)
+write.csv(ndvidf, file=paste(di, "/data/ndvi_atributes_all.csv", sep=""), row.names = FALSE)
+write.csv(iv_composite, file=paste(di, "/data/iv_composite.csv", sep=""), row.names = FALSE)
+```
