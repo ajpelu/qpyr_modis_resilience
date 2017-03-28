@@ -82,7 +82,7 @@ n_images_pixel <- raw %>%
 kable(n_images_pixel)
 ```
 
-*Summary table of layer summaryQA 
+* Summary table of layer summaryQA 
 
 ```{r}
 # Table of QA

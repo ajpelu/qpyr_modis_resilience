@@ -115,7 +115,7 @@ kable(n_images_pixel)
 |  2015|  20416|        22|
 |  2016|  21344|        23|
 
-\*Summary table of layer summaryQA
+-   Summary table of layer summaryQA
 
 ``` r
 # Table of QA
