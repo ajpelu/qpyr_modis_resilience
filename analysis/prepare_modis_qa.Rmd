@@ -510,14 +510,6 @@ write.csv(iv_composite, file=paste(di, "/data/iv_composite.csv", sep=""), row.na
 
 
 
-
-
-
-
-  
-
-
- 
 ```{r, echo=FALSE, eval=FALSE}
 # * Now we convert data of EVI, NDVI according to our ***filter criteria***: 
 #  * we remove the year value of a pixel if the pixel has bad quality in more than 4 composites in a year (4/23 = 17.39%; we retained 82.6 %) 
