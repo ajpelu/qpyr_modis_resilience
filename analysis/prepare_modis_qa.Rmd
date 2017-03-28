@@ -8,7 +8,7 @@ output:
     variant: markdown_github
 ---
   
-  
+# Filter data 
 ```{r wd, echo=FALSE}
 #---------------------------------
 machine <- 'ajpelu'
@@ -30,12 +30,12 @@ source(paste0(di,"/script/R/getComposite.R"))
 rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= ""), header = TRUE, sep = ',')
 ```
 
-## Prepare Data
-* Raw data come from GEE script (see [`/script/GEE/get_iv_modis.qp.js`](/script/GEE/get_iv_modis.qp.js)
+## Prepare Raw Data
+* Raw data come from GEE script (see [`/script/GEE/get_iv_modis.qp.js`](/script/GEE/get_iv_modis_qp.js)
 
-* Date: 
-  + Get date of the image (from hdf title, system.index) 
-  + Store as date (date format) and create new variable for year 
+* Date:
+    + Get date of the image (from hdf title, system.index) 
+    + Store as date (date format) and create new variable for year 
 
 * Select and rename variables of interest 
 
@@ -59,7 +59,8 @@ raw <- rawdata %>%
 ```
     
 ## Some metadata of the time series 
-### Temporal range of the time series 
+* Temporal range of the time series 
+
 ```{r}
 # Get temporal range of the data
 # Start date
@@ -69,9 +70,7 @@ unique(min(as.Date(raw$date)))
 unique(max(as.Date(raw$date)))
 ```
 
-
-## Quality assessment 
-### Number of images per year 
+* Number of images per year 
 ```{r}
 # See n of images per year and per pixel 
 n_images_pixel <- raw %>% 
@@ -83,7 +82,8 @@ n_images_pixel <- raw %>%
 kable(n_images_pixel)
 ```
 
-### Summary table of layer summaryQA 
+*Summary table of layer summaryQA 
+
 ```{r}
 # Table of QA
 raw %>% group_by(summQA) %>% 
@@ -93,7 +93,8 @@ raw %>% group_by(summQA) %>%
   kable() 
 ```
 
-### Explore temporal distribution of QA
+### QA 
+* Explore temporal distribution of QA
 
 ```{r, message=FALSE, warning=FALSE}
 qadate <- raw %>% 
@@ -102,10 +103,6 @@ qadate <- raw %>%
   mutate(freq = round((n / sum(n))*100, 2),
          QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), 
                               c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) 
-
-kable(qadate)
-
-
 qadate %>% 
   ggplot(aes(x=as.Date(date), y=freq, fill=QA)) + 
   geom_bar(stat = 'identity', position='fill') + 
@@ -142,7 +139,8 @@ marginal %>%
 ```
 
 
-### Quality usefulness 
+### Quality usefulness
+* All data
 ```{r}
 # See https://lpdaac.usgs.gov/sites/default/files/public/product_documentation/mod13_user_guide.pdf 
 raw %>% 
@@ -151,8 +149,10 @@ raw %>%
   summarise(n = n()) %>% 
   mutate(freq = round(n / sum (n)*100,2)) %>% 
   kable()
+```
 
-# Marginal data 
+* Marginal data 
+```{r}
 marginal %>% 
   mutate(qa_use_dec = decodeQAv(qa_use, nb=4)) %>% 
   group_by(qa_use_dec) %>% 
@@ -223,10 +223,10 @@ marginal %>%
 We applied customized filter based on Reyes-Díez et al. 2015. 
 
 * Creamos una variable nueva, llamada `filtered`. Aquellos pixeles con *Good Data* le asignamos valor `90`. Los *Snow/Ice* y los *Cloudy* le asignamos valor `99`. Para los *Marginal Data* miramos la calidad. En concreto previamente hemos analizado la cantidad de aerosoles, la de nubes y la de sombras (ver mas arriba). La forma de proceder es la siguiente: 
-  + Si tiene alta concentración de aerosoles, marcamos el pixel con 1. 
-  + Si tiene nubes adjacentes, marcamos el pixel con 1. 
-  + Si tiene sombra, marcamos el pixel con 1. 
-  + Al final, creamos una variable llamada `f_sum` con la suma de esos tres filtros. Si en alguno de los tres filtros se da la condición 1, es decir `f_sum > = 1`, entonces, le asignamos el valor `99` en la variable filtered.  
+    + Si tiene alta concentración de aerosoles, marcamos el pixel con 1. 
+    + Si tiene nubes adjacentes, marcamos el pixel con 1.
+    + Si tiene sombra, marcamos el pixel con 1. 
+    + Al final, creamos una variable llamada `f_sum` con la suma de esos tres filtros. Si en alguno de los tres filtros se da la condición 1, es decir `f_sum > = 1`, entonces, le asignamos el valor `99` en la variable filtered.  
 
 
 ```{r}
@@ -349,11 +349,11 @@ ncomposites_year %>% ggplot(aes(x=n)) +
 We do not apply a filter treshold, because we selected only the Good Data. 
 
 
-# Prepare data
+# Prepare data of processed IV
 
 ### Get the composite of the images and the season
 * See [Testa et al. 2014](https://www.researchgate.net/publication/262566793_Correcting_MODIS_16-day_composite_NDVI_time-series_with_actual_acquisition_dates)
-* Use a [custom function](/R/getComposite.R)
+* Use a [custom function](/script/R/getComposite.R)
 
 ```{r}
 # Get leap years 
@@ -396,11 +396,11 @@ iv by pixel and by composite (output as `./data/iv_composite.csv`). It contains 
 * `lat`: latitute coordinates 
 * `pop`: numeric code of the *Q. pyrenaica* population
 * `season`: 
-  + `0` annual value
-  + `1` spring value
-  + `2` summer value 
-  + `3` autumn value 
-  * `4` winter value 
+    + `0` annual value
+    + `1` spring value
+    + `2` summer value 
+    + `3` autumn value 
+    + `4` winter value 
 * `seasonF`: the season coded as factor 
 * `summQA`: the summary Quality Assessment (see MODIS)
 * `qa_use`: the usseful index (see QA MODIS)
@@ -427,12 +427,11 @@ These two dataframes have the following fields:
 * `year`
 * `evi` or `ndvi`: the value of the EVI (or NDVI) (cumulative value for each season)
 * `season`: the season of cumulative evi:
-
-   + `0` annual value
-   + `1` spring value
-   + `2` summer value 
-   + `3` autumn value 
-   + `4` winter value 
+    + `0` annual value
+    + `1` spring value
+    + `2` summer value 
+    + `3` autumn value 
+    + `4` winter value 
 * `seasonF`: the season coded as factor 
 * `long`: longitude coordinates
 * `lat`: latitute coordinates 
