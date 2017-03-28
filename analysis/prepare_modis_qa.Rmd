@@ -10,8 +10,8 @@ output:
   
 ```{r wd, echo=FALSE}
 #---------------------------------
-# machine <- 'ajpelu'
-machine <- 'ajpeluLap'
+machine <- 'ajpelu'
+# machine <- 'ajpeluLap'
 di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
 #---------------------------------
 ```
@@ -20,8 +20,7 @@ di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', 
 library("tidyverse")
 library("knitr")
 library("binaryLogic")
-
-# source(paste0(di,"/R/getComposite.R"))
+source(paste0(di,"/script/R/getComposite.R"))
 ```
 
 
@@ -239,7 +238,8 @@ rawfilter <- rawfilter %>%
                                          "Shadow", "Aerosol + Shadow", 
                                          "Clouds adj + Shadow", 
                                          "Aerosol + Clouds adj + Shadow",
-                                         "Good Data", "Snow / Ice or Cloudy", "NA")))
+                                         "Good Data", "Snow / Ice or Cloudy", "NA")),
+         mes = lubridate::month(date))
 
 rawfilter %>% group_by(filtered_qa) %>% 
   summarise(npixels = n()) %>% 
@@ -265,165 +265,88 @@ rawfilter %>% group_by(filtered_2_qa) %>%
 
 ```
 
-* Now we convert data of EVI, NDVI according to our filter criteria: 
- * we remove the year value of a pixel if the pixel has bad quality in more than 4 composites in a year (4/23 = 17.39%; we retained 82.6 %) 
- * we remove a pixel of the series if the pixel has bad quality for more 3 years (3/16 = 18.75 %; we retained 81.25 %)
- 
+We have to explore the temporal distribution of the filtered data (especially for Shadow)
+
 ```{r}
+sombras <- c("Shadow", "Aerosol + Shadow","Clouds adj + Shadow", "Aerosol + Clouds adj + Shadow") 
+sombras_n <- c(4, 5, 6, 7)
+                                         
+# Shadow 
+rawfilter %>% filter(filtered_2 %in% sombras_n) %>% group_by(mes) %>% 
+  summarise(n=n()) %>% 
+  mutate(freq = round((n  / sum(n )*100),2)) %>% 
+  ggplot(aes(x=as.factor(mes), y=n)) + 
+  geom_bar(stat='identity') +
+  geom_text(aes(label=freq, size=3, vjust=-.25)) + 
+  theme_bw() + 
+  theme(legend.position = 'none') + 
+  xlab('month') + 
+  ylab('# Images with shadow')
+```
 
-pixeles <- unique(raw$iv_malla_modi_id)
-years <- unique(raw$year)
+Now for Ice / Cloudy 
+```{r}
+# "Snow / Ice or Cloudy" (99)
+                                         
+# Shadow 
+rawfilter %>% filter(filtered_2 == 99) %>% group_by(mes) %>% 
+  summarise(n=n()) %>% 
+  mutate(freq = round((n  / sum(n )*100),2)) %>% 
+  ggplot(aes(x=as.factor(mes), y=n)) + 
+  geom_bar(stat='identity') +
+  geom_text(aes(label=freq, size=3, vjust=-.25)) + 
+  theme_bw() + 
+  theme(legend.position = 'none') + 
+  xlab('month') + 
+  ylab('# Images with Snow / Ice or Cloudy')
+```
 
-fd <- rawfilter %>% 
-  filter(year != 2016) %>% 
-  select(doy, evi, ndvi, iv_malla_modi_id, pop, date, year, lat, long, summQA, qa_use, filtered, filtered_2) %>% 
-  mutate(evi_f = ifelse(filtered_2 == 90, evi, NA),
-         ndvi_f = ifelse(filtered_2 == 90, ndvi,NA))
+We select only data with high Good Quality, because shadow, ice or cloudy are mainly locate at winter months. 
 
-
-pixel_i <- pixeles[1]
-year_j <- years[1]
-
+```{r}
 df <- rawfilter %>% 
-  filter(iv_malla_modi_id == pixel_i) %>% 
-  filter(year == year_j) 
+  filter(filtered_2 == 90) %>% 
+  select(doy, evi, ndvi, iv_malla_modi_id, pop, date, year, lat, long, summQA, qa_use, filtered, filtered_2, mes) 
 
-n_composites <- df %>% count() 
+df %>% group_by(mes) %>% 
+  summarise(n=n()) %>% 
+  mutate(freq = round((n/sum(n )*100),2)) %>% 
+  ggplot(aes(x=as.factor(mes), y=n)) + 
+  geom_bar(stat='identity') +
+  geom_text(aes(label=freq, size=3, vjust=-.25)) + 
+  theme_bw() + 
+  theme(legend.position = 'none') + 
+  xlab('month') + 
+  ylab('# Images with Good Quality')
+```
 
+```{r}
+ncomposites_year <- df %>% group_by(iv_malla_modi_id, year) %>% summarise(n=n()) 
 
-
-
-
-### Explore by pixel 
-
-
-All data with 'Snow/Ice' and 'Cloudy' (summQA) are set to NaN in the new filter_summary. The 'Good Data' are set to 1. For 'Marginal data' we use the following criteria: 
-
-* Explore f_snow and set NaN if the pixel has: 'Snow/Ice'
-* Explore f_
-
-Si los datos son buenos le doy un 1. 
-Si los datos son snow/ice le doy un NaN 
-Si los datos son cloudy le doy un NaN 
-Si los datos son Marginal data 
-   * Si tiene snow/ice = NaN
-   * Si tiene shadow = NaN 
-   * Si tiene clouds 
-   * Si tiene alta cantidad de aerosoles = NaN 
-   
-Finalmente analizo la putunación del usefulness index 
-
-
-
-
-
-
-
-
-
-         qa_filter = ifelse(qa != "Marginal data", summQA, 
-                            
-                            
-                            
-                            # Aerosol 
-                            ifelse(decodeQAv(qa_aerosol, nb=2) == '11', 'Aerosol (high)',
-                            ))
-                            
-                 
-                            
-                            marginal %>% 
-  mutate(qa_aerosol_dec = decodeQAv(qa_aerosol, nb=2)) %>% 
-  group_by(qa_aerosol_dec) %>% 
-  summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))           
-                  
-                  ))
-
-
-
-
-
-
-
+ncomposites_year %>% ggplot(aes(x=n)) + 
+  geom_histogram(stat='count') +
+  xlab('# composites by year and pixel') + 
+  ylab('# ')+
+  theme_bw()
 ```
 
 
-filter(summQA == 1) 
-
-## Read and prepare evi data
-
-We created three datasets: 
-
-* annual and seasonal evi by pixel (output as `./data/evi_atributes_all.csv`)
-* annual and seasonal ndvi by pixel (output as `./data/ndvi_atributes_all.csv`)
-* iv by pixel and by composite (output as `./data/iv_composite.csv`)
-
-The first two dataframes have the following fields: 
-
-* `iv_malla_modi_id`: the identifier of the modis cell
-* `year`
-* `evi` or `ndvi`: the value of the EVI (or NDVI) (cumulative value for each season)
-* `season`: the season of cumulative evi:
-  * `0` annual value
-  * `1` spring value
-  * `2` summer value 
-  * `3` autumn value 
-  * `4` winter value 
-* `seasonF`: the season coded as factor 
-* `long`: longitude coordinates
-* `lat`: latitute coordinates 
-* `pop`: numeric code of the *Q. pyrenaica* population 
-
-The iv_composite dataframe has the following fields: 
-
-* `evi` or `ndvi`: value of IV for the date 
-* `date`: date of adquisition of the image
-* `composite`: number of composite (23 by year)
-* `iv_malla_modi_id`, `year`, `lat`, `long`, `pop`, `seasonF` 
+We do not apply a filter treshold, because we selected only the Good Data. 
 
 
+# Prepare data
 
-
-* Explore Quality by date 
-
-```{r, message=FALSE}
-qdate <- rawdata %>% 
-  group_by(date, summQA) %>% 
-  count(date, summQA) %>% 
-  mutate(freq = round((n / sum(n))*100, 2),
-         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) 
-
-
-qdate %>% 
-  ggplot(aes(x=as.Date(date), y=freq, fill=QA)) + 
-  geom_bar(stat = 'identity', position='fill') + 
-#  facet_wrap(~QA, ncol=1) + 
-  theme_bw() +
-  scale_x_date(date_labels = "%Y %d")
-  
-
-```
-
-
-
-
-
-
-
-
-
-## Prepare data 
 ### Get the composite of the images and the season
 * See [Testa et al. 2014](https://www.researchgate.net/publication/262566793_Correcting_MODIS_16-day_composite_NDVI_time-series_with_actual_acquisition_dates)
 * Use a [custom function](/R/getComposite.R)
 
 ```{r}
 # Get leap years 
-years <- unique(rawdata$year)
-ly <- years[leap_year(years)]
+years <- unique(df$year)
+ly <- years[lubridate::leap_year(years)]
 
 # Two functions 
-rd <- rawdata %>% 
+rd <- df %>% 
   mutate(m= lubridate::month(date),
          d= lubridate::day(date)) %>% 
   mutate(composite = ifelse(year %in% ly, 
@@ -442,13 +365,85 @@ rd <- rd %>%
          ndvi = ndvi * 0.0001) 
 ```
 
-### Create dataframe with composites
+
+
+We created several datasets: 
+
+### ***iv_composite*** 
+iv by pixel and by composite (output as `./data/iv_composite.csv`). It contains the following fields: 
+* `iv_malla_modi_id`: the identifier of the modis cell
+* `year`
+* `evi` or `ndvi`: the value of the EVI (or NDVI) for the composite 
+* `date`: date of adquisition of the image
+* `composite`: number of composite (23 by year)
+* `long`: longitude coordinates
+* `lat`: latitute coordinates 
+* `pop`: numeric code of the *Q. pyrenaica* population
+* `season`: 
+  * `0` annual value
+  * `1` spring value
+  * `2` summer value 
+  * `3` autumn value 
+  * `4` winter value 
+* `seasonF`: the season coded as factor 
+* `summQA`: the summary Quality Assessment (see MODIS)
+* `qa_use`: the usseful index (see QA MODIS)
+
+### ***evi_mean***
+evi mean by pixel and year (output as `./data/evi_mean.csv`). It contains the following fields:
+
+* `iv_malla_modi_id`: the identifier of the modis cell
+* `year`
+* `evi`: mean value of evi for pixel *i* at year *j*
+* `long`: longitude coordinates
+* `lat`: latitute coordinates 
+* `pop`: numeric code of the *Q. pyrenaica* population
+* `n_composites`: number of composites used to computed the annual mean value of EVI (according to previously filtering)
+
+
+### ***evi_seasonal*** and ***ndvi_seasonal***
+* annual and seasonal evi by pixel (output as `./data/evi_atributes_all.csv`)
+* annual and seasonal ndvi by pixel (output as `./data/ndvi_atributes_all.csv`)
+
+These two dataframes have the following fields: 
+
+* `iv_malla_modi_id`: the identifier of the modis cell
+* `year`
+* `evi` or `ndvi`: the value of the EVI (or NDVI) (cumulative value for each season)
+* `season`: the season of cumulative evi:
+  * `0` annual value
+  * `1` spring value
+  * `2` summer value 
+  * `3` autumn value 
+  * `4` winter value 
+* `seasonF`: the season coded as factor 
+* `long`: longitude coordinates
+* `lat`: latitute coordinates 
+* `pop`: numeric code of the *Q. pyrenaica* population 
+
+
+#### Create dataframe with composites
 ```{r}
 iv_composite <- rd %>% 
-  dplyr::select(iv_malla_modi_id, evi, ndvi,pop, date, year, long, lat, composite, seasonF = season)
+  dplyr::select(iv_malla_modi_id, evi, ndvi, pop, date, year, long, lat, composite, seasonF = season, summQA, qa_use)
 ```
 
-### Create seasonal dataframes of EVI and NDVI 
+#### Create EVI mean dataset
+```{r}
+evimean <- rd %>% 
+  group_by(iv_malla_modi_id, year) %>%
+  summarise(evi = mean(evi[evi >=0]),
+            n_composites = length(year)) 
+
+# Add coordinates and pob and other useful info 
+aux_rd <- rd %>% dplyr::select(iv_malla_modi_id, long, lat, pop) %>%
+  group_by(iv_malla_modi_id) %>% unique()
+
+# Join dataframes 
+evimean <- evimean %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id") 
+```
+
+####  Create seasonal dataframes of EVI and NDVI (integrate, EVI and NDVI sum)
 * EVI
 ```{r}
 # Create annual evi by pixel 
@@ -505,7 +500,118 @@ ndvidf <- ndvidf %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id")
 ### Export dataframes
 ```{r}
 # Export dataframes 
+write.csv(evimean, file=paste(di, "/data/evi_mean.csv", sep=""), row.names = FALSE)
 write.csv(evidf, file=paste(di, "/data/evi_atributes_all.csv", sep=""), row.names = FALSE)
 write.csv(ndvidf, file=paste(di, "/data/ndvi_atributes_all.csv", sep=""), row.names = FALSE)
 write.csv(iv_composite, file=paste(di, "/data/iv_composite.csv", sep=""), row.names = FALSE)
 ```
+
+
+
+
+
+
+
+
+
+  
+
+
+ 
+```{r, echo=FALSE, eval=FALSE}
+# * Now we convert data of EVI, NDVI according to our ***filter criteria***: 
+#  * we remove the year value of a pixel if the pixel has bad quality in more than 4 composites in a year (4/23 = 17.39%; we retained 82.6 %) 
+#  * we remove a pixel of the series if the pixel has bad quality for more 3 years (3/16 = 18.75 %; we retained 81.25 %)
+
+df <- rawfilter %>% 
+  filter(year != 2016) %>% 
+  select(doy, evi, ndvi, iv_malla_modi_id, pop, date, year, lat, long, summQA, qa_use, filtered, filtered_2) %>% 
+  mutate(evi_f = ifelse(filtered_2 == 90, evi, NA),
+         ndvi_f = ifelse(filtered_2 == 90, ndvi,NA), 
+         mes = lubridate::month(date))
+
+
+
+# Create counters 
+pixeles <- unique(df$iv_malla_modi_id)
+years <- unique(df$year)
+
+# Dataframe for output
+filter_pixel_year <- data.frame()
+
+for (i in pixeles){ 
+  # Create a subset of pixel of interest   
+  df_pixel <- df %>% filter(iv_malla_modi_id == i) 
+  
+  # Create empty dataframe 
+  filter_pixel_year_aux <- data.frame()
+  
+  for (j in years){ 
+    # empty dataframe 
+    out_aux <- data.frame()
+    
+    # Create a dataframe for year "j"
+    df_pixel_year <- df_pixel %>% filter(year == j) 
+    
+    # Get numbers of composites by year 
+    n_composites <- df_pixel_year %>% count() 
+    
+    # How many composites are marked as "bad data" 
+    bad_composites <- sum(is.na(df_pixel_year$evi_f))
+    
+    # Treshold composites
+    # For year 2000 is 3; for other year is 4 
+    tc <- ifelse(j == 2000, 4, 5)
+    
+    # Output 
+    status <- ifelse(bad_composites > tc, 'Bad year', 'Ok') 
+    out_aux <- cbind(i, y, status)
+    
+    # status <- ifelse(bad_composites > tc, 'Bad year', 'Ok') 
+    # out_aux$iv_malla_modi_id <- i 
+    # out_aux$status <- ifelse(bad_composites > tc, 'Bad year', 'Ok') 
+    #   
+    #   <- cbind(iv_malla_modi_id = as.numeric(as.character(i)), 
+    #              year=as.numeric(as.character(j)), 
+    #              status)
+    
+    # Rbinds
+    filter_pixel_year_aux <- rbind(filter_pixel_year_aux, out_aux)
+    }
+  
+  # Rbinds
+  filter_pixel_year <- rbind(filter_pixel_year, filter_pixel_year_aux)
+} 
+
+
+filter_pixel_year <- filter_pixel_year %>% 
+  mutate(year = as.numeric(as.character(y)), 
+         iv_malla_modi_id = as.numeric(as.character(i))) %>% 
+  select(year, iv_malla_modi_id, status)
+
+
+filter_pixel_year %>% 
+  group_by(iv_malla_modi_id, status) %>% 
+  summarise(n = n())
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
