@@ -4,6 +4,7 @@ author: "AJ Perez-Luque (@ajpelu)"
 date: "2017 March"
 output:  
   md_document:
+    toc: true
     variant: markdown_github
 ---
   
@@ -30,12 +31,11 @@ rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= "
 ```
 
 ## Prepare Data
-* Raw data come from GEE script (see [`./script/GEE/get_iv_modis.qp.js`](./script/GEE/get_iv_modis.qp.js)
+* Raw data come from GEE script (see [`/script/GEE/get_iv_modis.qp.js`](/script/GEE/get_iv_modis.qp.js)
 
 * Date: 
-
- * Get date of the image (from hdf title, system.index) 
- * Store as date (date format) and create new variable for year 
+  + Get date of the image (from hdf title, system.index) 
+  + Store as date (date format) and create new variable for year 
 
 * Select and rename variables of interest 
 
@@ -100,7 +100,10 @@ qadate <- raw %>%
   group_by(date, summQA) %>% 
   count(date, summQA) %>% 
   mutate(freq = round((n / sum(n))*100, 2),
-         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) 
+         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), 
+                              c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) 
+
+kable(qadate)
 
 
 qadate %>% 
@@ -134,7 +137,8 @@ marginal %>%
   mutate(qa_quality_dec = decodeQAv(qa_quality, nb=2)) %>% 
   group_by(qa_quality_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable()
 ```
 
 
@@ -145,14 +149,16 @@ raw %>%
   mutate(qa_use_dec = decodeQAv(qa_use, nb=4)) %>% 
   group_by(qa_use_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable()
 
 # Marginal data 
 marginal %>% 
   mutate(qa_use_dec = decodeQAv(qa_use, nb=4)) %>% 
   group_by(qa_use_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable() 
 ```
 
 ### Aerosol 
@@ -161,7 +167,8 @@ marginal %>%
   mutate(qa_aerosol_dec = decodeQAv(qa_aerosol, nb=2)) %>% 
   group_by(qa_aerosol_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable()
 ```
 
 * Only the 7.02 % of the pixels marked as 'Marginal data' contain high concentration of Aerosols. 
@@ -173,14 +180,16 @@ marginal %>%
   mutate(qa_adj_cloud_dec = decodeQAv(qa_adj_cloud, nb=1)) %>% 
   group_by(qa_adj_cloud_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable()
 
 # Mixed
 marginal %>% 
   mutate(qa_mix_cloud_dec = decodeQAv(qa_mix_cloud, nb=1)) %>% 
   group_by(qa_mix_cloud_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable()
 ```
 
 * All the pixel marked as 'Marginal data' do not contain mixed cloud.
@@ -192,7 +201,8 @@ marginal %>%
   mutate(qa_snow_dec = decodeQAv(qa_snow, nb=1)) %>% 
   group_by(qa_snow_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable()
 ```
 
 * All the pixel marked as 'Marginal data' do not contain snow or ice. 
@@ -203,7 +213,8 @@ marginal %>%
   mutate(qa_shadow_dec = decodeQAv(qa_shadow, nb=1)) %>% 
   group_by(qa_shadow_dec) %>% 
   summarise(n = n()) %>% 
-  mutate(freq = round(n / sum (n)*100,2))
+  mutate(freq = round(n / sum (n)*100,2)) %>% 
+  kable()
 ```
 
 * We have to consider the shadow 
@@ -212,10 +223,10 @@ marginal %>%
 We applied customized filter based on Reyes-Díez et al. 2015. 
 
 * Creamos una variable nueva, llamada `filtered`. Aquellos pixeles con *Good Data* le asignamos valor `90`. Los *Snow/Ice* y los *Cloudy* le asignamos valor `99`. Para los *Marginal Data* miramos la calidad. En concreto previamente hemos analizado la cantidad de aerosoles, la de nubes y la de sombras (ver mas arriba). La forma de proceder es la siguiente: 
-  * Si tiene alta concentración de aerosoles, marcamos el pixel con 1. 
-  * Si tiene nubes adjacentes, marcamos el pixel con 1. 
-  * Si tiene sombra, marcamos el pixel con 1. 
-  * Al final, creamos una variable llamada `f_sum` con la suma de esos tres filtros. Si en alguno de los tres filtros se da la condición 1, es decir `f_sum > = 1`, entonces, le asignamos el valor `99` en la variable filtered.  
+  + Si tiene alta concentración de aerosoles, marcamos el pixel con 1. 
+  + Si tiene nubes adjacentes, marcamos el pixel con 1. 
+  + Si tiene sombra, marcamos el pixel con 1. 
+  + Al final, creamos una variable llamada `f_sum` con la suma de esos tres filtros. Si en alguno de los tres filtros se da la condición 1, es decir `f_sum > = 1`, entonces, le asignamos el valor `99` en la variable filtered.  
 
 
 ```{r}
@@ -245,7 +256,8 @@ rawfilter <- rawfilter %>%
 
 rawfilter %>% group_by(filtered_qa) %>% 
   summarise(npixels = n()) %>% 
-  mutate(freq = round((npixels / sum(npixels)*100),2))
+  mutate(freq = round((npixels / sum(npixels)*100),2)) %>% 
+  kable() 
 ```
 
 * According to Reyes-Díez et al. (2015) we must consider the shadow in the mountain, but we can discard the filter of adjacent clouds. On the other hand, the use of EVI mean is highly stable under the use of any filter (see Reyes-Díez et al. 2015). 
@@ -263,7 +275,8 @@ rawfilter <- rawfilter %>%
 
 rawfilter %>% group_by(filtered_2_qa) %>% 
   summarise(npixels = n()) %>% 
-  mutate(freq = round((npixels / sum(npixels)*100),2))
+  mutate(freq = round((npixels / sum(npixels)*100),2)) %>% 
+  kable()
 
 ```
 
@@ -373,6 +386,7 @@ We created several datasets:
 
 ### ***iv_composite*** 
 iv by pixel and by composite (output as `./data/iv_composite.csv`). It contains the following fields: 
+
 * `iv_malla_modi_id`: the identifier of the modis cell
 * `year`
 * `evi` or `ndvi`: the value of the EVI (or NDVI) for the composite 
@@ -382,10 +396,10 @@ iv by pixel and by composite (output as `./data/iv_composite.csv`). It contains 
 * `lat`: latitute coordinates 
 * `pop`: numeric code of the *Q. pyrenaica* population
 * `season`: 
-  * `0` annual value
-  * `1` spring value
-  * `2` summer value 
-  * `3` autumn value 
+  + `0` annual value
+  + `1` spring value
+  + `2` summer value 
+  + `3` autumn value 
   * `4` winter value 
 * `seasonF`: the season coded as factor 
 * `summQA`: the summary Quality Assessment (see MODIS)
@@ -413,11 +427,12 @@ These two dataframes have the following fields:
 * `year`
 * `evi` or `ndvi`: the value of the EVI (or NDVI) (cumulative value for each season)
 * `season`: the season of cumulative evi:
-  * `0` annual value
-  * `1` spring value
-  * `2` summer value 
-  * `3` autumn value 
-  * `4` winter value 
+
+   + `0` annual value
+   + `1` spring value
+   + `2` summer value 
+   + `3` autumn value 
+   + `4` winter value 
 * `seasonF`: the season coded as factor 
 * `long`: longitude coordinates
 * `lat`: latitute coordinates 
