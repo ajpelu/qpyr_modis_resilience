@@ -13,9 +13,10 @@ rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= "
 Prepare Data
 ------------
 
--   Raw data come from GEE script (see [`./script/GEE/get_iv_modis.qp.js`](./script/GEE/get_iv_modis.qp.js%60)
+-   Raw data come from GEE script (see [`./script/GEE/get_iv_modis.qp.js`](./script/GEE/get_iv_modis.qp.js)
 
 -   Date:
+
 -   Get date of the image (from hdf title, system.index)
 -   Store as date (date format) and create new variable for year
 
@@ -43,7 +44,7 @@ raw <- rawdata %>%
 Some metadata of the time series
 --------------------------------
 
-### Temporal range of the Time series
+### Temporal range of the time series
 
 ``` r
 # Get temporal range of the data
@@ -103,17 +104,17 @@ kable(n_images_pixel)
 raw %>% group_by(summQA) %>% 
   summarise(npixels = n()) %>% 
   mutate(freq = round((npixels / sum(npixels)*100),2),
-         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy")))
+         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) %>% 
+  kable() 
 ```
 
-    ## # A tibble: 5 <U+00D7> 4
-    ##   summQA npixels  freq            QA
-    ##    <int>   <int> <dbl>         <chr>
-    ## 1      0  207616 57.96     Good Data
-    ## 2      1  115378 32.21 Marginal data
-    ## 3      2    9268  2.59      Snow/Ice
-    ## 4      3   25502  7.12        Cloudy
-    ## 5     NA     444  0.12          <NA>
+|  summQA|  npixels|   freq| QA            |
+|-------:|--------:|------:|:--------------|
+|       0|   207616|  57.96| Good Data     |
+|       1|   115378|  32.21| Marginal data |
+|       2|     9268|   2.59| Snow/Ice      |
+|       3|    25502|   7.12| Cloudy        |
+|      NA|      444|   0.12| NA            |
 
 ### Explore temporal distribution of QA
 

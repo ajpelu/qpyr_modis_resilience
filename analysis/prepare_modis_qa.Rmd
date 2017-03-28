@@ -30,9 +30,10 @@ rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= "
 ```
 
 ## Prepare Data
-* Raw data come from GEE script (see [`./script/GEE/get_iv_modis.qp.js`](./script/GEE/get_iv_modis.qp.js`)
+* Raw data come from GEE script (see [`./script/GEE/get_iv_modis.qp.js`](./script/GEE/get_iv_modis.qp.js)
 
 * Date: 
+
  * Get date of the image (from hdf title, system.index) 
  * Store as date (date format) and create new variable for year 
 
@@ -58,7 +59,7 @@ raw <- rawdata %>%
 ```
     
 ## Some metadata of the time series 
-### Temporal range of the Time series 
+### Temporal range of the time series 
 ```{r}
 # Get temporal range of the data
 # Start date
@@ -88,7 +89,8 @@ kable(n_images_pixel)
 raw %>% group_by(summQA) %>% 
   summarise(npixels = n()) %>% 
   mutate(freq = round((npixels / sum(npixels)*100),2),
-         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy")))
+         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) %>% 
+  kable() 
 ```
 
 ### Explore temporal distribution of QA
@@ -210,10 +212,10 @@ marginal %>%
 We applied customized filter based on Reyes-Díez et al. 2015. 
 
 * Creamos una variable nueva, llamada `filtered`. Aquellos pixeles con *Good Data* le asignamos valor `90`. Los *Snow/Ice* y los *Cloudy* le asignamos valor `99`. Para los *Marginal Data* miramos la calidad. En concreto previamente hemos analizado la cantidad de aerosoles, la de nubes y la de sombras (ver mas arriba). La forma de proceder es la siguiente: 
- * Si tiene alta concentración de aerosoles, marcamos el pixel con 1. 
- * Si tiene nubes adjacentes, marcamos el pixel con 1. 
- * Si tiene sombra, marcamos el pixel con 1. 
- * Al final, creamos una variable llamada `f_sum` con la suma de esos tres filtros. Si en alguno de los tres filtros se da la condición 1, es decir `f_sum > = 1`, entonces, le asignamos el valor `99` en la variable filtered.  
+  * Si tiene alta concentración de aerosoles, marcamos el pixel con 1. 
+  * Si tiene nubes adjacentes, marcamos el pixel con 1. 
+  * Si tiene sombra, marcamos el pixel con 1. 
+  * Al final, creamos una variable llamada `f_sum` con la suma de esos tres filtros. Si en alguno de los tres filtros se da la condición 1, es decir `f_sum > = 1`, entonces, le asignamos el valor `99` en la variable filtered.  
 
 
 ```{r}
