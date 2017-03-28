@@ -19,6 +19,7 @@ di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', 
 ```{r packages, warning=FALSE, message=FALSE}
 library("tidyverse")
 library("knitr")
+library("binaryLogic")
 
 # source(paste0(di,"/R/getComposite.R"))
 ```
@@ -29,17 +30,14 @@ library("knitr")
 rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= ""), header = TRUE, sep = ',')
 ```
 
-
 ## Prepare Data
+* Raw data come from GEE script (see [`./script/GEE/get_iv_modis.qp.js`](./script/GEE/get_iv_modis.qp.js`)
 
-# 1 # Date 
-# * Get date of the image (from hdf title, system.index). 
-# * Store as date (date format) and create new variable for year 
-# 2 # Coordinates
-# * Get lat and long from '.geo' variable 
-# * Store as numeric 
-# 3 # Select and rename variables of interest 
+* Date: 
+ * Get date of the image (from hdf title, system.index) 
+ * Store as date (date format) and create new variable for year 
 
+* Select and rename variables of interest 
 
 ```{r}
 raw <- rawdata %>% 
@@ -60,10 +58,6 @@ raw <- rawdata %>%
                 qa_atmos, qa_mix_cloud, qa_landwater, qa_snow, qa_shadow)
 ```
     
-
-
-
-aa2
 ## Some metadata of the time series 
 ### Temporal range of the Time series 
 ```{r}
@@ -76,8 +70,285 @@ unique(max(as.Date(raw$date)))
 ```
 
 
+## Quality assessment 
+### Number of images per year 
+```{r}
+# See n of images per year and per pixel 
+n_images_pixel <- raw %>% 
+  mutate(year = lubridate::year(date)) %>% 
+  group_by(year) %>%
+  summarise(n = n(),
+            n_pixel = n()/length(unique(iv_malla_modi_id)))
+
+kable(n_images_pixel)
+```
+
+### Summary table of layer summaryQA 
+```{r}
+# Table of QA
+raw %>% group_by(summQA) %>% 
+  summarise(npixels = n()) %>% 
+  mutate(freq = round((npixels / sum(npixels)*100),2),
+         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy")))
+```
+
+### Explore temporal distribution of QA
+
+```{r, message=FALSE, warning=FALSE}
+qadate <- raw %>% 
+  group_by(date, summQA) %>% 
+  count(date, summQA) %>% 
+  mutate(freq = round((n / sum(n))*100, 2),
+         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy"))) 
 
 
+qadate %>% 
+  ggplot(aes(x=as.Date(date), y=freq, fill=QA)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+#  facet_wrap(~QA, ncol=1) + 
+  theme_bw() +
+  scale_x_date(date_labels = "%Y %d")
+```
+
+
+## QA detailed 
+* Only explore the marginal data
+
+
+```{r} 
+decodeQA <- function(x, nb){
+  bit <- intToBits(x)
+  paste(tail(rev(as.integer(bit)), nb), collapse="")}
+
+decodeQAv <- Vectorize(decodeQA)
+
+
+marginal <- raw %>% filter(summQA == 1) 
+```
+
+
+### Quality 
+```{r}
+marginal %>% 
+  mutate(qa_quality_dec = decodeQAv(qa_quality, nb=2)) %>% 
+  group_by(qa_quality_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+```
+
+
+### Quality usefulness 
+```{r}
+# See https://lpdaac.usgs.gov/sites/default/files/public/product_documentation/mod13_user_guide.pdf 
+raw %>% 
+  mutate(qa_use_dec = decodeQAv(qa_use, nb=4)) %>% 
+  group_by(qa_use_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+
+# Marginal data 
+marginal %>% 
+  mutate(qa_use_dec = decodeQAv(qa_use, nb=4)) %>% 
+  group_by(qa_use_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+```
+
+### Aerosol 
+```{r}
+marginal %>% 
+  mutate(qa_aerosol_dec = decodeQAv(qa_aerosol, nb=2)) %>% 
+  group_by(qa_aerosol_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+```
+
+* Only the 7.02 % of the pixels marked as 'Marginal data' contain high concentration of Aerosols. 
+
+### Clouds 
+```{r}
+# Adjacents
+marginal %>% 
+  mutate(qa_adj_cloud_dec = decodeQAv(qa_adj_cloud, nb=1)) %>% 
+  group_by(qa_adj_cloud_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+
+# Mixed
+marginal %>% 
+  mutate(qa_mix_cloud_dec = decodeQAv(qa_mix_cloud, nb=1)) %>% 
+  group_by(qa_mix_cloud_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+```
+
+* All the pixel marked as 'Marginal data' do not contain mixed cloud.
+* We have to consider the Adjacent clouds 
+
+### Snow 
+```{r}
+marginal %>% 
+  mutate(qa_snow_dec = decodeQAv(qa_snow, nb=1)) %>% 
+  group_by(qa_snow_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+```
+
+* All the pixel marked as 'Marginal data' do not contain snow or ice. 
+
+### Shadow
+```{r}
+marginal %>% 
+  mutate(qa_shadow_dec = decodeQAv(qa_shadow, nb=1)) %>% 
+  group_by(qa_shadow_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))
+```
+
+* We have to consider the shadow 
+
+### Filter 
+We applied customized filter based on Reyes-Díez et al. 2015. 
+
+* Creamos una variable nueva, llamada `filtered`. Aquellos pixeles con *Good Data* le asignamos valor `90`. Los *Snow/Ice* y los *Cloudy* le asignamos valor `99`. Para los *Marginal Data* miramos la calidad. En concreto previamente hemos analizado la cantidad de aerosoles, la de nubes y la de sombras (ver mas arriba). La forma de proceder es la siguiente: 
+ * Si tiene alta concentración de aerosoles, marcamos el pixel con 1. 
+ * Si tiene nubes adjacentes, marcamos el pixel con 1. 
+ * Si tiene sombra, marcamos el pixel con 1. 
+ * Al final, creamos una variable llamada `f_sum` con la suma de esos tres filtros. Si en alguno de los tres filtros se da la condición 1, es decir `f_sum > = 1`, entonces, le asignamos el valor `99` en la variable filtered.  
+
+
+```{r}
+rawfilter <- raw %>% 
+  mutate(f_aerosol = ifelse(decodeQAv(qa_aerosol, nb=2) == '11', 'Aerosol (high)', 'OK'),
+         f_cloud_a = ifelse(decodeQAv(qa_adj_cloud, nb=1) == '1', 'Clouds: adjacent', 'OK'),
+         f_shadow = ifelse(decodeQAv(qa_shadow, nb=1) == '1', 'Shadow','OK'),
+         # as integer
+         f_aerosoli = ifelse(f_aerosol == 'OK', 0, 1),
+         f_cloud_ai = ifelse(f_cloud_a == 'OK', 0, 2),
+         f_shadowi = ifelse(f_shadow == 'OK', 0, 4)) 
+
+rawfilter <- rawfilter %>% 
+  mutate(f_sum = f_aerosoli + f_cloud_ai + f_shadowi,
+         filtered = ifelse(summQA == 0, 90, 
+                           ifelse(summQA %in% c(2,3), 99, f_sum)), 
+         
+         filtered_qa = plyr::mapvalues(filtered, 
+                                       c(0, 1, 2, 3, 4, 5, 6, 7, 90, 99, NA),
+                                       c("Others", "Aerosol",
+                                         "Clouds adj", "Aerosol + Clouds adj",
+                                         "Shadow", "Aerosol + Shadow", 
+                                         "Clouds adj + Shadow", 
+                                         "Aerosol + Clouds adj + Shadow",
+                                         "Good Data", "Snow / Ice or Cloudy", "NA")))
+
+rawfilter %>% group_by(filtered_qa) %>% 
+  summarise(npixels = n()) %>% 
+  mutate(freq = round((npixels / sum(npixels)*100),2))
+```
+
+* According to Reyes-Díez et al. (2015) we must consider the shadow in the mountain, but we can discard the filter of adjacent clouds. On the other hand, the use of EVI mean is highly stable under the use of any filter (see Reyes-Díez et al. 2015). 
+
+```{r}
+rawfilter <- rawfilter %>% 
+  mutate(filtered_2 = ifelse(filtered %in% c(0,1,2,3), 90, filtered),
+         filtered_2_qa = plyr::mapvalues(filtered_2, 
+                                       c(4, 5, 6, 7, 90, 99, NA),
+                                       c("Shadow", "Aerosol + Shadow", 
+                                         "Clouds adj + Shadow", 
+                                         "Aerosol + Clouds adj + Shadow",
+                                         "Good Data", "Snow / Ice or Cloudy", "NA")))
+
+
+rawfilter %>% group_by(filtered_2_qa) %>% 
+  summarise(npixels = n()) %>% 
+  mutate(freq = round((npixels / sum(npixels)*100),2))
+
+```
+
+* Now we convert data of EVI, NDVI according to our filter criteria: 
+ * we remove the year value of a pixel if the pixel has bad quality in more than 4 composites in a year (4/23 = 17.39%; we retained 82.6 %) 
+ * we remove a pixel of the series if the pixel has bad quality for more 3 years (3/16 = 18.75 %; we retained 81.25 %)
+ 
+```{r}
+
+pixeles <- unique(raw$iv_malla_modi_id)
+years <- unique(raw$year)
+
+fd <- rawfilter %>% 
+  filter(year != 2016) %>% 
+  select(doy, evi, ndvi, iv_malla_modi_id, pop, date, year, lat, long, summQA, qa_use, filtered, filtered_2) %>% 
+  mutate(evi_f = ifelse(filtered_2 == 90, evi, NA),
+         ndvi_f = ifelse(filtered_2 == 90, ndvi,NA))
+
+
+pixel_i <- pixeles[1]
+year_j <- years[1]
+
+df <- rawfilter %>% 
+  filter(iv_malla_modi_id == pixel_i) %>% 
+  filter(year == year_j) 
+
+n_composites <- df %>% count() 
+
+
+
+
+
+### Explore by pixel 
+
+
+All data with 'Snow/Ice' and 'Cloudy' (summQA) are set to NaN in the new filter_summary. The 'Good Data' are set to 1. For 'Marginal data' we use the following criteria: 
+
+* Explore f_snow and set NaN if the pixel has: 'Snow/Ice'
+* Explore f_
+
+Si los datos son buenos le doy un 1. 
+Si los datos son snow/ice le doy un NaN 
+Si los datos son cloudy le doy un NaN 
+Si los datos son Marginal data 
+   * Si tiene snow/ice = NaN
+   * Si tiene shadow = NaN 
+   * Si tiene clouds 
+   * Si tiene alta cantidad de aerosoles = NaN 
+   
+Finalmente analizo la putunación del usefulness index 
+
+
+
+
+
+
+
+
+
+         qa_filter = ifelse(qa != "Marginal data", summQA, 
+                            
+                            
+                            
+                            # Aerosol 
+                            ifelse(decodeQAv(qa_aerosol, nb=2) == '11', 'Aerosol (high)',
+                            ))
+                            
+                 
+                            
+                            marginal %>% 
+  mutate(qa_aerosol_dec = decodeQAv(qa_aerosol, nb=2)) %>% 
+  group_by(qa_aerosol_dec) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = round(n / sum (n)*100,2))           
+                  
+                  ))
+
+
+
+
+
+
+
+```
+
+
+filter(summQA == 1) 
 
 ## Read and prepare evi data
 
@@ -111,27 +382,8 @@ The iv_composite dataframe has the following fields:
 * `iv_malla_modi_id`, `year`, `lat`, `long`, `pop`, `seasonF` 
 
 
-### QA
-```{r}
-# See n of images per year and per pixel 
-n_images_pixel <- raw %>% 
-  mutate(year = lubridate::year(date)) %>% 
-  group_by(year) %>%
-  summarise(n = n(),
-            n_pixel = n()/length(unique(iv_malla_modi_id)))
 
-kable(n_images_pixel)
-```
 
-#### Summary table of layer summaryQA 
-```{r}
-# Table of QA
-rawdata %>% group_by(summQA) %>% 
-  summarise(npixels = n()) %>% 
-  mutate(freq = round((npixels / sum(npixels)*100),2),
-         QA = plyr::mapvalues(summQA, c(0, 1, 2, 3), c("Good Data", "Marginal data", "Snow/Ice", "Cloudy")))
-```
-  
 * Explore Quality by date 
 
 ```{r, message=FALSE}
