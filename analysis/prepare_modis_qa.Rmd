@@ -21,13 +21,14 @@ di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', 
 library("tidyverse")
 library("knitr")
 library("binaryLogic")
+library("corrplot")
 source(paste0(di,"/script/R/getComposite.R"))
 ```
 
 
 ```{r}
 # Read data
-rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= ""), header = TRUE, sep = ',')
+rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017_aug.csv", sep= ""), header = TRUE, sep = ',')
 ```
 
 ## Prepare Raw Data
@@ -171,7 +172,7 @@ marginal %>%
   kable()
 ```
 
-* Only the 7.02 % of the pixels marked as 'Marginal data' contain high concentration of Aerosols. 
+* Only the 6.96 % of the pixels marked as 'Marginal data' contain high concentration of Aerosols. 
 
 ### Clouds 
 ```{r}
@@ -299,6 +300,9 @@ rawfilter %>% filter(filtered_2 %in% sombras_n) %>% group_by(mes) %>%
   ylab('# Images with shadow')
 ```
 
+Vemos que la mayoría de las imagenes con sombra están en los meses de invierno: mes 1, 2, 3, y 12 (69.32 %), esto es: el 69.32 % de las imágenes que están marcadas con sombra en QA Detailed, se distribuyen temporalmente entre los meses 1,2,3 y 12, que coincide con el periodo donde el Quercus pyrenaica no presenta actividad fotosintética (incluir cita de estación de crecimiento, y de cuando tira la hoja), por lo tanto los valores con sombra los debemos eliminar a la hora de calcular la media de EVI, ya que se encuentran la mayoría en los meses de periodo en los que el roble no tiene actividad fotosintética. 
+
+
 Now for Ice / Cloudy 
 ```{r}
 # "Snow / Ice or Cloudy" (99)
@@ -345,6 +349,8 @@ ncomposites_year %>% ggplot(aes(x=n)) +
   theme_bw()
 ```
 
+En este último gráfico, exploramos el número de pixeles que tienen todos las imágenes de un año completo. Aunque no se si tiene mucho sentido este gráfico. 
+
 
 We do not apply a filter treshold, because we selected only the Good Data. 
 
@@ -379,7 +385,6 @@ rd <- rd %>%
   mutate(evi = evi * 0.0001,
          ndvi = ndvi * 0.0001) 
 ```
-
 
 
 We created several datasets: 
@@ -448,7 +453,7 @@ iv_composite <- rd %>%
 ```{r}
 evimean <- rd %>% 
   group_by(iv_malla_modi_id, year) %>%
-  summarise(evi = mean(evi[evi >=0]),
+  summarise(evi = mean(evi[evi >=0], na.rm=T),
             n_composites = length(year)) 
 
 # Add coordinates and pob and other useful info 
@@ -465,14 +470,14 @@ evimean <- evimean %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id")
 # Create annual evi by pixel 
 evi_annual <- rd %>% 
   group_by(iv_malla_modi_id, year) %>%
-  summarise(evi = sum(evi[evi >=0])) %>%
+  summarise(evi = sum(evi[evi >=0],  na.rm=T)) %>%
   mutate(seasonF='annual', 
          season = 0)
 
 # Create seasonal evi by pixel 
 evi_season <- rd %>% 
   group_by(iv_malla_modi_id, year, season) %>%
-  summarise(evi = sum(evi[evi >=0])) %>% 
+  summarise(evi = sum(evi[evi >=0], na.rm=T)) %>% 
   mutate(seasonF = season) %>% 
   mutate(season = ifelse(season == 'autumn', 3, 
                    ifelse(season == 'winter', 4, 
@@ -488,6 +493,61 @@ aux_rd <- rd %>% dplyr::select(iv_malla_modi_id, long, lat, pop) %>%
 # Join dataframes 
 evidf <- evidf %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id") 
 ```
+
+## Correlaciones entre el EVI medio y los EVI estacionales para los robledales
+
+```{r}
+co <- evidf %>% dplyr::select(iv_malla_modi_id, year, evi, seasonF) %>% 
+  spread(seasonF, evi) %>% as.data.frame()
+  
+co2 <- evimean %>% 
+  dplyr::select(iv_malla_modi_id, year, evimean = evi) %>% 
+  inner_join(co, by =c("iv_malla_modi_id","year")) %>% as.data.frame()
+
+
+co3 <- co2 %>% dplyr::select(-iv_malla_modi_id, -year)
+
+# Ver https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html 
+cor.mtest <- function(mat, conf.level = 0.95){
+  mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat <- lowCI.mat <- uppCI.mat <- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    diag(lowCI.mat) <- diag(uppCI.mat) <- 1
+    for(i in 1:(n-1)){
+        for(j in (i+1):n){
+            tmp <- cor.test(mat[,i], mat[,j], conf.level = conf.level)
+            p.mat[i,j] <- p.mat[j,i] <- tmp$p.value
+            lowCI.mat[i,j] <- lowCI.mat[j,i] <- tmp$conf.int[1]
+            uppCI.mat[i,j] <- uppCI.mat[j,i] <- tmp$conf.int[2]
+        }
+    }
+    return(list(p.mat, lowCI.mat, uppCI.mat))
+}
+
+
+m <- cor(co3, use='complete.obs')
+res1 <- cor.mtest(co3,0.99)
+
+
+corrplot(m, type='upper',diag=TRUE, 
+         tl.cex=.9, tl.col='black', tl.pos='lt',
+         p.mat=res1[[1]], insig='p-value', sig.level=0.001)
+
+corrplot(m, method= 'number', type='lower',
+           diag=TRUE, col='grey40',
+           tl.pos='n', cl.pos='n',
+           add=TRUE)
+
+```
+
+
+
+
+
+
+
+
 
 * NDVI 
 ```{r}
