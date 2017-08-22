@@ -16,7 +16,8 @@
     -   [ ***iv\_composite***](#iv_composite)
     -   [ ***evi\_mean***](#evi_mean)
     -   [***evi\_seasonal*** and ***ndvi\_seasonal***](#evi_seasonal-and-ndvi_seasonal)
-    -   [Export dataframes](#export-dataframes)
+    -   [Correlaciones entre el EVI medio y los EVI estacionales para los robledales](#correlaciones-entre-el-evi-medio-y-los-evi-estacionales-para-los-robledales)
+        -   [Export dataframes](#export-dataframes)
 
 Filter data
 ===========
@@ -25,12 +26,13 @@ Filter data
 library("tidyverse")
 library("knitr")
 library("binaryLogic")
+library("corrplot")
 source(paste0(di,"/script/R/getComposite.R"))
 ```
 
 ``` r
 # Read data
-rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017.csv", sep= ""), header = TRUE, sep = ',')
+rawdata <- read.csv(file=paste(di, "/data_raw/evi/iv_qp_raw_qa_2017_aug.csv", sep= ""), header = TRUE, sep = ',')
 ```
 
 Prepare Raw Data
@@ -97,7 +99,7 @@ kable(n_images_pixel)
 
 |  year|      n|  n\_pixel|
 |-----:|------:|---------:|
-|  2000|  17632|        19|
+|  2000|  18560|        20|
 |  2001|  21344|        23|
 |  2002|  21344|        23|
 |  2003|  21344|        23|
@@ -112,7 +114,7 @@ kable(n_images_pixel)
 |  2012|  21344|        23|
 |  2013|  21344|        23|
 |  2014|  21344|        23|
-|  2015|  20416|        22|
+|  2015|  21344|        23|
 |  2016|  21344|        23|
 
 -   Summary table of layer summaryQA
@@ -128,10 +130,10 @@ raw %>% group_by(summQA) %>%
 
 |  summQA|  npixels|   freq| QA            |
 |-------:|--------:|------:|:--------------|
-|       0|   207616|  57.96| Good Data     |
-|       1|   115378|  32.21| Marginal data |
-|       2|     9268|   2.59| Snow/Ice      |
-|       3|    25502|   7.12| Cloudy        |
+|       0|   208437|  57.89| Good Data     |
+|       1|   116411|  32.33| Marginal data |
+|       2|     9268|   2.57| Snow/Ice      |
+|       3|    25504|   7.08| Cloudy        |
 |      NA|      444|   0.12| NA            |
 
 ### QA
@@ -182,10 +184,10 @@ marginal %>%
   kable()
 ```
 
-| qa\_quality\_dec |      n|   freq|
-|:-----------------|------:|------:|
-| 00               |  27239|  23.61|
-| 01               |  88139|  76.39|
+| qa\_quality\_dec |      n|  freq|
+|:-----------------|------:|-----:|
+| 00               |  27360|  23.5|
+| 01               |  89051|  76.5|
 
 ### Quality usefulness
 
@@ -203,19 +205,19 @@ raw %>%
 
 | qa\_use\_dec |       n|   freq|
 |:-------------|-------:|------:|
-| 0000         |  190527|  53.19|
-| 0001         |   61081|  17.05|
-| 0010         |   31599|   8.82|
-| 0011         |   27283|   7.62|
-| 0100         |   23851|   6.66|
-| 0101         |   13003|   3.63|
-| 0110         |    6146|   1.72|
-| 0111         |    2968|   0.83|
+| 0000         |  191348|  53.14|
+| 0001         |   62054|  17.23|
+| 0010         |   31643|   8.79|
+| 0011         |   27297|   7.58|
+| 0100         |   23855|   6.63|
+| 0101         |   13003|   3.61|
+| 0110         |    6146|   1.71|
+| 0111         |    2968|   0.82|
 | 1000         |     890|   0.25|
 | 1001         |     264|   0.07|
 | 1010         |     140|   0.04|
 | 1011         |       8|   0.00|
-| 1111         |     448|   0.13|
+| 1111         |     448|   0.12|
 
 -   Marginal data
 
@@ -230,15 +232,15 @@ marginal %>%
 
 | qa\_use\_dec |      n|   freq|
 |:-------------|------:|------:|
-| 0001         |  44230|  38.33|
-| 0010         |  27251|  23.62|
-| 0011         |  19739|  17.11|
-| 0100         |  14742|  12.78|
-| 0101         |   6642|   5.76|
-| 0110         |   1891|   1.64|
+| 0001         |  45201|  38.83|
+| 0010         |  27295|  23.45|
+| 0011         |  19753|  16.97|
+| 0100         |  14746|  12.67|
+| 0101         |   6642|   5.71|
+| 0110         |   1891|   1.62|
 | 0111         |    708|   0.61|
 | 1000         |     53|   0.05|
-| 1111         |    122|   0.11|
+| 1111         |    122|   0.10|
 
 ### Aerosol
 
@@ -253,12 +255,12 @@ marginal %>%
 
 | qa\_aerosol\_dec |      n|   freq|
 |:-----------------|------:|------:|
-| 00               |   1418|   1.23|
-| 01               |  27239|  23.61|
-| 10               |  78623|  68.14|
-| 11               |   8098|   7.02|
+| 00               |   1418|   1.22|
+| 01               |  27360|  23.50|
+| 10               |  79535|  68.32|
+| 11               |   8098|   6.96|
 
--   Only the 7.02 % of the pixels marked as 'Marginal data' contain high concentration of Aerosols.
+-   Only the 6.96 % of the pixels marked as 'Marginal data' contain high concentration of Aerosols.
 
 ### Clouds
 
@@ -274,8 +276,8 @@ marginal %>%
 
 | qa\_adj\_cloud\_dec |      n|   freq|
 |:--------------------|------:|------:|
-| 0                   |  80492|  69.76|
-| 1                   |  34886|  30.24|
+| 0                   |  81517|  70.03|
+| 1                   |  34894|  29.97|
 
 ``` r
 # Mixed
@@ -289,7 +291,7 @@ marginal %>%
 
 | qa\_mix\_cloud\_dec |       n|  freq|
 |:--------------------|-------:|-----:|
-| 0                   |  115378|   100|
+| 0                   |  116411|   100|
 
 -   All the pixel marked as 'Marginal data' do not contain mixed cloud.
 -   We have to consider the Adjacent clouds
@@ -307,7 +309,7 @@ marginal %>%
 
 | qa\_snow\_dec |       n|  freq|
 |:--------------|-------:|-----:|
-| 0             |  115378|   100|
+| 0             |  116411|   100|
 
 -   All the pixel marked as 'Marginal data' do not contain snow or ice.
 
@@ -324,8 +326,8 @@ marginal %>%
 
 | qa\_shadow\_dec |      n|   freq|
 |:----------------|------:|------:|
-| 0               |  77408|  67.09|
-| 1               |  37970|  32.91|
+| 0               |  78388|  67.34|
+| 1               |  38023|  32.66|
 
 -   We have to consider the shadow
 
@@ -372,17 +374,17 @@ rawfilter %>% group_by(filtered_qa) %>%
 
 | filtered\_qa                  |  npixels|   freq|
 |:------------------------------|--------:|------:|
-| Aerosol                       |     3246|   0.91|
+| Aerosol                       |     3246|   0.90|
 | Aerosol + Clouds adj          |     2733|   0.76|
 | Aerosol + Clouds adj + Shadow |     1392|   0.39|
 | Aerosol + Shadow              |      727|   0.20|
-| Clouds adj                    |    16130|   4.50|
-| Clouds adj + Shadow           |    14631|   4.08|
-| Good Data                     |   207616|  57.96|
+| Clouds adj                    |    16134|   4.48|
+| Clouds adj + Shadow           |    14635|   4.06|
+| Good Data                     |   208437|  57.89|
 | NA                            |      444|   0.12|
-| Others                        |    55299|  15.44|
-| Shadow                        |    21220|   5.92|
-| Snow / Ice or Cloudy          |    34770|   9.71|
+| Others                        |    56275|  15.63|
+| Shadow                        |    21269|   5.91|
+| Snow / Ice or Cloudy          |    34772|   9.66|
 
 -   According to Reyes-Díez et al. (2015) we must consider the shadow in the mountain, but we can discard the filter of adjacent clouds. On the other hand, the use of EVI mean is highly stable under the use of any filter (see Reyes-Díez et al. 2015).
 
@@ -407,11 +409,11 @@ rawfilter %>% group_by(filtered_2_qa) %>%
 |:------------------------------|--------:|------:|
 | Aerosol + Clouds adj + Shadow |     1392|   0.39|
 | Aerosol + Shadow              |      727|   0.20|
-| Clouds adj + Shadow           |    14631|   4.08|
-| Good Data                     |   285024|  79.57|
+| Clouds adj + Shadow           |    14635|   4.06|
+| Good Data                     |   286825|  79.66|
 | NA                            |      444|   0.12|
-| Shadow                        |    21220|   5.92|
-| Snow / Ice or Cloudy          |    34770|   9.71|
+| Shadow                        |    21269|   5.91|
+| Snow / Ice or Cloudy          |    34772|   9.66|
 
 We have to explore the temporal distribution of the filtered data (especially for Shadow)
 
@@ -433,6 +435,8 @@ rawfilter %>% filter(filtered_2 %in% sombras_n) %>% group_by(mes) %>%
 ```
 
 ![](prepare_modis_qa_files/figure-markdown_github/unnamed-chunk-17-1.png)
+
+Vemos que la mayoría de las imagenes con sombra están en los meses de invierno: mes 1, 2, 3, y 12 (69.32 %), esto es: el 69.32 % de las imágenes que están marcadas con sombra en QA Detailed, se distribuyen temporalmente entre los meses 1,2,3 y 12, que coincide con el periodo donde el Quercus pyrenaica no presenta actividad fotosintética (incluir cita de estación de crecimiento, y de cuando tira la hoja), por lo tanto los valores con sombra los debemos eliminar a la hora de calcular la media de EVI, ya que se encuentran la mayoría en los meses de periodo en los que el roble no tiene actividad fotosintética.
 
 Now for Ice / Cloudy
 
@@ -488,6 +492,8 @@ ncomposites_year %>% ggplot(aes(x=n)) +
     ## Warning: Ignoring unknown parameters: binwidth, bins, pad
 
 ![](prepare_modis_qa_files/figure-markdown_github/unnamed-chunk-20-1.png)
+
+En este último gráfico, exploramos el número de pixeles que tienen todos las imágenes de un año completo. Aunque no se si tiene mucho sentido este gráfico.
 
 We do not apply a filter treshold, because we selected only the Good Data.
 
@@ -594,7 +600,7 @@ iv_composite <- rd %>%
 ``` r
 evimean <- rd %>% 
   group_by(iv_malla_modi_id, year) %>%
-  summarise(evi = mean(evi[evi >=0]),
+  summarise(evi = mean(evi[evi >=0], na.rm=T),
             n_composites = length(year)) 
 
 # Add coordinates and pob and other useful info 
@@ -613,14 +619,14 @@ evimean <- evimean %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id")
 # Create annual evi by pixel 
 evi_annual <- rd %>% 
   group_by(iv_malla_modi_id, year) %>%
-  summarise(evi = sum(evi[evi >=0])) %>%
+  summarise(evi = sum(evi[evi >=0],  na.rm=T)) %>%
   mutate(seasonF='annual', 
          season = 0)
 
 # Create seasonal evi by pixel 
 evi_season <- rd %>% 
   group_by(iv_malla_modi_id, year, season) %>%
-  summarise(evi = sum(evi[evi >=0])) %>% 
+  summarise(evi = sum(evi[evi >=0], na.rm=T)) %>% 
   mutate(seasonF = season) %>% 
   mutate(season = ifelse(season == 'autumn', 3, 
                    ifelse(season == 'winter', 4, 
@@ -637,20 +643,69 @@ aux_rd <- rd %>% dplyr::select(iv_malla_modi_id, long, lat, pop) %>%
 evidf <- evidf %>% dplyr::inner_join(aux_rd, by="iv_malla_modi_id") 
 ```
 
+Correlaciones entre el EVI medio y los EVI estacionales para los robledales
+---------------------------------------------------------------------------
+
+``` r
+co <- evidf %>% dplyr::select(iv_malla_modi_id, year, evi, seasonF) %>% 
+  spread(seasonF, evi) %>% as.data.frame()
+  
+co2 <- evimean %>% 
+  dplyr::select(iv_malla_modi_id, year, evimean = evi) %>% 
+  inner_join(co, by =c("iv_malla_modi_id","year")) %>% as.data.frame()
+
+
+co3 <- co2 %>% dplyr::select(-iv_malla_modi_id, -year)
+
+# Ver https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html 
+cor.mtest <- function(mat, conf.level = 0.95){
+  mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat <- lowCI.mat <- uppCI.mat <- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    diag(lowCI.mat) <- diag(uppCI.mat) <- 1
+    for(i in 1:(n-1)){
+        for(j in (i+1):n){
+            tmp <- cor.test(mat[,i], mat[,j], conf.level = conf.level)
+            p.mat[i,j] <- p.mat[j,i] <- tmp$p.value
+            lowCI.mat[i,j] <- lowCI.mat[j,i] <- tmp$conf.int[1]
+            uppCI.mat[i,j] <- uppCI.mat[j,i] <- tmp$conf.int[2]
+        }
+    }
+    return(list(p.mat, lowCI.mat, uppCI.mat))
+}
+
+
+m <- cor(co3, use='complete.obs')
+res1 <- cor.mtest(co3,0.99)
+
+
+corrplot(m, type='upper',diag=TRUE, 
+         tl.cex=.9, tl.col='black', tl.pos='lt',
+         p.mat=res1[[1]], insig='p-value', sig.level=0.001)
+
+corrplot(m, method= 'number', type='lower',
+           diag=TRUE, col='grey40',
+           tl.pos='n', cl.pos='n',
+           add=TRUE)
+```
+
+![](prepare_modis_qa_files/figure-markdown_github/unnamed-chunk-26-1.png)
+
 -   NDVI
 
 ``` r
 # Create annual ndvi by pixel 
 ndvi_annual <- rd %>% 
   group_by(iv_malla_modi_id, year) %>%
-  summarise(ndvi = sum(ndvi[ndvi >=0])) %>%
+  summarise(ndvi = sum(ndvi[ndvi >=0], na.rm=T)) %>%
   mutate(seasonF='annual', 
          season = 0)
 
 # Create seasonal ndvi by pixel 
 ndvi_season <- rd %>% 
   group_by(iv_malla_modi_id, year, season) %>%
-  summarise(ndvi = sum(ndvi[ndvi >=0])) %>% 
+  summarise(ndvi = sum(ndvi[ndvi >=0], na.rm=T)) %>% 
   mutate(seasonF = season) %>% 
   mutate(season = ifelse(season == 'autumn', 3, 
                    ifelse(season == 'winter', 4, 

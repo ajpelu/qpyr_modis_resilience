@@ -542,26 +542,19 @@ corrplot(m, method= 'number', type='lower',
 ```
 
 
-
-
-
-
-
-
-
 * NDVI 
 ```{r}
 # Create annual ndvi by pixel 
 ndvi_annual <- rd %>% 
   group_by(iv_malla_modi_id, year) %>%
-  summarise(ndvi = sum(ndvi[ndvi >=0])) %>%
+  summarise(ndvi = sum(ndvi[ndvi >=0], na.rm=T)) %>%
   mutate(seasonF='annual', 
          season = 0)
 
 # Create seasonal ndvi by pixel 
 ndvi_season <- rd %>% 
   group_by(iv_malla_modi_id, year, season) %>%
-  summarise(ndvi = sum(ndvi[ndvi >=0])) %>% 
+  summarise(ndvi = sum(ndvi[ndvi >=0], na.rm=T)) %>% 
   mutate(seasonF = season) %>% 
   mutate(season = ifelse(season == 'autumn', 3, 
                    ifelse(season == 'winter', 4, 
