@@ -14,7 +14,7 @@ Technical info:
  * See this [link](https://rawgit.com/ajpelu/qpyr_distribution/master/analysis/distribution_map_sn.html)
  
 * Pixels covering Pyrenan oak forest in Sierra Nevada: `./github/ajpelu/qpyr_distribution/data_raw/geoinfo/iv_malla_modis_qp_centroid.shp` 
- * # pixels = 927 pixels 
+ * *n* pixels = 927 pixels 
  * See this [link](https://rawgit.com/ajpelu/qpyr_distribution/master/analysis/distribution_map_sn.html)
 
 The script to download MODIS data is at: `./script/GEE/get_iv_modis_qp.js` 
