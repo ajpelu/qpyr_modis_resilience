@@ -1,46 +1,27 @@
----
-title: "Compute EVI anomalies"
-author: "AJ Perez-Luque (@ajpelu)"
-date: "2017 Aug"
-output:  
-  md_document:
-    variant: markdown_github
----
-```{r, echo=FALSE, message=FALSE}
-require(knitr)
-opts_chunk$set(fig.align='center', fig.width = 14, message = FALSE, warning = FALSE) 
-```
-
-```{r wd, echo=FALSE}
-#---------------------------------
-machine <- 'ajpelu'
-# machine <- 'ajpeluLap'
-di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
-#---------------------------------
-```
-
-
-```{r packages, warning=FALSE, message=FALSE}
+``` r
 library('tidyverse')
 ```
 
-# Read data 
-Two dataframes: 
-* EVI mean dataframe
-* IV composite 
+Read data
+=========
 
-(for another previous analysis see this [repo](https://github.com/ajpelu/qpyr_resilience)) and 
+Two dataframes: \* EVI mean dataframe \* IV composite
 
-```{r}
+(for another previous analysis see this [repo](https://github.com/ajpelu/qpyr_resilience)) and
+
+``` r
 # Read data
 iv <- read.csv(file=paste(di, "/data/iv_composite.csv", sep=""), header = TRUE, sep = ',')
 evi <- read.csv(file=paste(di, "/data/evi_mean.csv", sep=""), header = TRUE, sep = ',')
 ```
 
-# Compute anomalies 
-## By composite
+Compute anomalies
+=================
 
-```{r, eval=FALSE}
+By composite
+------------
+
+``` r
 # Set counters
 pixels <- unique(iv$iv_malla_modi_id)
 composites <- unique(iv$composite)
@@ -116,8 +97,10 @@ anomalias_composite <- anomalos %>% dplyr::inner_join(iv_aux, by="iv_malla_modi_
 write.csv(anomalias_composite, file=paste(di, "/data/anomalies/anomalias_composite.csv", sep=""), row.names = FALSE)
 ```
 
-# By evi_mean
-```{r, eval=FALSE}
+By evi\_mean
+============
+
+``` r
 # Set counters
 pixels <- unique(evi$iv_malla_modi_id)
 # composites <- unique(evi$seasonF)
