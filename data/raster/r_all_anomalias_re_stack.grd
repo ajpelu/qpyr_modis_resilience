@@ -1,0 +1,25 @@
+[general]
+creator=R package 'raster'
+created=2017-08-23 14:51:16
+[georeference]
+nrows=126
+ncols=99
+xmin=-3.50581765011684
+ymin=36.9222790931291
+xmax=-3.22762765011684
+ymax=37.2057790931291
+projection=+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0
+[data]
+datatype=FLT8S
+byteorder=little
+nbands=6
+bandorder=BIL
+minvalue=-0.0834775624763399:-0.0481336062942624:-16.1546524664667:-8.02185259011342:-5.4389241771636:-3.19364644092756
+maxvalue=0.0262977311015901:0.0176254889194253:3.88734800806202:3.99576493393397:1.43416404955189:1.71353497345325
+nodatavalue=-1.7e+308
+[legend]
+legendtype=
+values=
+color=
+[description]
+layername=a_2005:a_2012:nora_2005:nora_2012:sa_2005:sa_2012

@@ -1,0 +1,25 @@
+[general]
+creator=R package 'raster'
+created=2017-08-23 14:51:16
+[georeference]
+nrows=113
+ncols=89
+xmin=456456.116532875
+ymin=4088182.25881063
+xmax=478706.116532875
+ymax=4116432.25881063
+projection=+init=epsg:23030 +proj=utm +zone=30 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs
+[data]
+datatype=FLT8S
+byteorder=little
+nbands=6
+bandorder=BIL
+minvalue=-0.0945075111775478:-0.0557118852188527:-17.4451966534222:-9.36416760568675:-5.86962130457329:-3.66665687709456
+maxvalue=0.0308880503599662:0.0223070733462322:4.36555214015385:4.72514458209457:1.91208311999659:1.83379576227094
+nodatavalue=-1.7e+308
+[legend]
+legendtype=
+values=
+color=
+[description]
+layername=a_2005:a_2012:nora_2005:nora_2012:sa_2005:sa_2012
