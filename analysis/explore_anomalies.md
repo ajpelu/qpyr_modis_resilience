@@ -1308,14 +1308,19 @@ pi
 
 #### Plot de trayectoria de las anomalías
 
--   Idea de plot de la media y la varianza (Trayectoria). Relacionado con las métricas de estabilidad (com. personal. Paula Escribano) (:red\_circle: analizar mejor)
+-   Idea de plot de la media y la varianza (Trayectoria). Relacionado con las métricas de estabilidad (com. personal. Paula Escribano).
+
+-   Referencias intersantes para las trayectorias:
+
+    -   Zimmermann, N. E., R. A. Washington-Allen, R. D. Ramsey, M. E. Schaepman, L. Mathys, B. Koetz, M. Kneubuehler, and T. C. Edwards. 2007. Modern remote sensing for environmental monitoring of landscape states and trajectories. Pages 65-91 in F. Kienast, O. Wildi, and S. Ghosh, editors. A changing world: challenges for landscape research. Springer, Dordrecht, The Netherlands.
+    -   Washington-Allen, R. A., R. D. Ramsey, N. E. West, and B. E. Norton. 2008. Quantification of the ecological resilience of drylands using digital remote sensing. Ecology and Society 13(1): 33. <http://www.ecologyandsociety.org/vol13/iss1/art33/>
 
 ``` r
 traj <- anomalias_evimean %>% group_by(pop, y) %>% 
   summarise(mean = mean(a),
             sd = sd(a))
 
-traj_plot <- traj %>% 
+traj_mean <- traj %>% 
   group_by(y) %>% 
   summarise(meanOfmean = mean(mean), 
             sdOfmean = sd(mean),
@@ -1323,13 +1328,18 @@ traj_plot <- traj %>%
             meanOfsd = mean(sd),
             sdOfsd = sd(sd),
             seOfsd = sdOfsd /sqrt(length(sd))) %>% 
+  as.data.frame()
+
+
+traj_plot <- traj_mean%>% 
   ggplot(aes(x=meanOfmean, y=meanOfsd, label=y)) +
   geom_errorbar(aes(ymin=meanOfsd - seOfsd, ymax=meanOfsd + seOfsd)) + 
   geom_errorbarh(aes(xmin=meanOfmean - seOfmean, xmax=meanOfmean + seOfmean)) + 
   geom_path(colour='gray') +
   geom_point(size=3, shape=21, fill='white') + 
   geom_text(hjust = 0.001, nudge_x = 0.001) + 
-  geom_vline(xintercept = 0, colour='red') +
+  geom_vline(aes(xintercept = mean(meanOfmean)), colour='red') +
+  geom_hline(aes(yintercept = mean(meanOfsd)), colour ='red')+
   theme_bw() + xlab('mean') + ylab('variance') + 
   theme(strip.background = element_rect(fill = "white"), 
         legend.position="none") 
@@ -1349,7 +1359,7 @@ dev.off()
     ##                 2
 
 ``` r
-traj_plot_pop <- traj %>% 
+traj_mean_pop <- traj %>% 
   mutate(clu_pop = as.factor(ifelse(pop %in% c(1,2,3,4,5), 'N', 'S'))) %>% 
   group_by(clu_pop,y) %>% 
   summarise(meanOfmean = mean(mean), 
@@ -1358,17 +1368,33 @@ traj_plot_pop <- traj %>%
             meanOfsd = mean(sd),
             sdOfsd = sd(sd),
             seOfsd = sdOfsd /sqrt(length(sd))) %>%
-  ggplot(aes(x=meanOfmean, y=meanOfsd, label=y)) +
-    geom_errorbar(aes(ymin=meanOfsd - seOfsd, ymax=meanOfsd + seOfsd)) + 
+  as.data.frame() 
+
+line_traj_mean_pop <- traj_mean_pop %>% 
+  group_by(clu_pop) %>% 
+  summarise(
+    meanOfmean = mean(meanOfmean), 
+    meanOfsd = mean(meanOfsd)
+  )
+
+
+  
+traj_plot_pop <- ggplot(traj_mean_pop,
+  aes(x=meanOfmean, y=meanOfsd, label=y)) +
+  geom_errorbar(aes(ymin=meanOfsd - seOfsd, ymax=meanOfsd + seOfsd)) + 
   geom_errorbarh(aes(xmin=meanOfmean - seOfmean, xmax=meanOfmean + seOfmean)) + 
   geom_path(colour='gray') +
   geom_point(size=3, shape=21, fill='white') +
   geom_text(hjust = 0.001, nudge_x = 0.001) + 
-  geom_vline(xintercept = 0, colour='red') +
   facet_wrap(~clu_pop) +
   theme_bw() + xlab('mean') + ylab('variance') + 
   theme(strip.background = element_rect(fill = "white"), 
         legend.position="none") 
+
+traj_plot_pop <- 
+  traj_plot_pop + 
+  geom_vline(aes(xintercept = meanOfmean), line_traj_mean_pop,  colour='red') +
+  geom_hline(aes(yintercept = meanOfsd), line_traj_mean_pop, colour ='red') 
 
 traj_plot_pop
 ```
@@ -1383,3 +1409,20 @@ dev.off()
 
     ## quartz_off_screen 
     ##                 2
+
+Notas que podemos obtener de explorar las anomalías
+===================================================
+
+Del análisis del plot de trayectorias
+-------------------------------------
+
+-   2005 supuso una disminución del greenness (el promedio de las anomalías es muy bajo respecto a los otros años), y esta disminución es bastante homogénea para todos los pixeles.
+
+-   Aunque 2012 presentó anomalías negativas (disminuición del greenness), su magnitud promedio (es decir el promedio para todos los pixeles) fue inferior al promedio observado para los años 2006, 2007 y 2000. Nótese que los años 2006 y 2007 son los posteriores a la gran sequía de 2005.
+
+-   Un análisis detallado entre las poblaciones del N y del S, refleja un patron simliar respecto a 2005, esto es, es el año en el que el promedio de las anomalías fue el mas bajo. Con 2012 ocurre algo similar. Llama la atención, que para 2005 sin embargo el patron fue mas heterogéno en las poblaciones del sur, esto es, mucha varibilidad en las anomalías de las poblaciones situadas en el sur.
+
+Explorando las anomalías
+------------------------
+
+-   Cuando exploramos las anomalías (brutas, estandarizadas y normalizadas) observamos valores muy negativos para el año 2005. Sin embargo
