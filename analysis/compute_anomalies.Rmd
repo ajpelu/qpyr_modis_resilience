@@ -114,15 +114,11 @@ write.csv(anomalias_evimean, file=paste(di, "/data/anomalies/anomalias_evimean.c
 
 Las anomalias se calculan para cada pixel del siguiente modo: a = evi_year - evi_ref; siendo evi_year el valor del EVI medio para el año en cuestión y *evi_ref* la media de todos los valores de EVI medio en todo el periodo de referencia. 
 
-En el caso de las anomalías estandarizadas, utilizamos la aproximación de Gao et al. (2016) [doi:10.1038/srep26958]( https://dx.doi.org/10.1038/srep26958), donde las anomalias las dividimos por la desviación estandar de los valores de EVI medio para el periodo de referencia. Las anomalías estandarizadas generalmente proporcionan mas información referente a la magnitud de la anomalía ya que las potenciales influencias de la dispersión de los datos han sido eliminadas. Por tanto las anomalías estandarizadas se calculan como: sa = (evi_year - evi_ref) / sd_ref. 
+En el caso de las anomalías estandarizadas, utilizamos la aproximación de Gao et al. (2016) [doi:10.1038/srep26958](https://dx.doi.org/10.1038/srep26958), donde las anomalias las dividimos por la desviación estandar de los valores de EVI medio para el periodo de referencia. Las anomalías estandarizadas generalmente proporcionan mas información referente a la magnitud de la anomalía ya que las potenciales influencias de la dispersión de los datos han sido eliminadas. Por tanto las anomalías estandarizadas se calculan como: sa = (evi_year - evi_ref) / sd_ref. 
 
 Finalmente, computamos las anomalias normalizadas, en las cuales escalamos los valores de las anomalías entre -100 y 100, de acuerdo a la formula: nora = (evi_year - evi_ref) / (evi_year + evi_ref)*100. Mas información ver https://www.researchgate.net/post/how_can_I_normalize_the_range_of_NDVI_anomaly 
 
-
-
-
-
-
+Por otro lado, podemos utilizar el criterio de Samanta et al. 2010 (http://onlinelibrary.wiley.com/doi/10.1029/2009GL042154/abstract y  http://dx.doi.org/10.1111/j.1469-8137.2010.03516.x) --> Ojo leer bien. 
 
 
 ## By composite (OJO esto aun no lo he computado: 23 / aug)

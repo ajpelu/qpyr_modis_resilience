@@ -99,6 +99,8 @@ En el caso de las anomalías estandarizadas, utilizamos la aproximación de Gao 
 
 Finalmente, computamos las anomalias normalizadas, en las cuales escalamos los valores de las anomalías entre -100 y 100, de acuerdo a la formula: nora = (evi\_year - evi\_ref) / (evi\_year + evi\_ref)\*100. Mas información ver <https://www.researchgate.net/post/how_can_I_normalize_the_range_of_NDVI_anomaly>
 
+Por otro lado, podemos utilizar el criterio de Samanta et al. 2010 (<http://onlinelibrary.wiley.com/doi/10.1029/2009GL042154/abstract> y <http://dx.doi.org/10.1111/j.1469-8137.2010.03516.x>) --&gt; Ojo leer bien.
+
 By composite (OJO esto aun no lo he computado: 23 / aug)
 --------------------------------------------------------
 

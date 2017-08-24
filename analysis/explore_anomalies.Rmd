@@ -831,7 +831,17 @@ dev.off()
 
 ## Explorando las anomalías 
 
-* Cuando exploramos las anomalías (brutas, estandarizadas y normalizadas) observamos valores muy negativos para el año 2005. Sin embargo 
+* Cuando exploramos las anomalías (brutas, estandarizadas y normalizadas) observamos valores muy negativos para el año 2005. Sin embargo vemos valores menos negativos para 2005. :red_circle: Tukey posthoc testing (lsmeans package CITAR) was conducted for pairwise comparisons among the slopes and the disturbance years :red_circle:
+
+    * Las anomalías (sa) fueron significativamente menores en 2005 (`round(postH_sa[[5]][1,2],3)` ± `round(postH_sa[[5]][1,3],3)`)que para 2012 (`round(postH_sa[[5]][2,2],3)` ± `round(postH_sa[[5]][2,3],3)`), (LSMEANS, t.ratio = -45.358; p_value < 0.0001)
+
+* Si utilizamos el criterio de Samanta et al. 2010, de las anomalias estandarizadas, vemos que solamente ocurre bronwning en el evento de sequía de 2005, ya que para el resto de la serie todos los valores de las anomalías están dentro -1 y 1. Además observamos que esto ocurre en ambas cluster de poblaciones (N y S), siendo mas intensa la reducción en las poblaciones del N. 
+
+* Explorando las anomalias entre N y S, vemos que en 2005 la reducción fue mayor para las poblaciones del N. Este se ve muy bien sobre todo en los mapas, en las que vemos que para 2005, existe una mayor concentración de valores negativos de anomalías en las poblaciones de N. Asimismo, vemos que las poblaciones del S, muestran valores heterogéneos de anomalías en 2005. Esto concuerda con lo observado en el análisis de trayectoria. 
+
+    * También observamos anomalías (sa) significativamente menores en para las poblaciones del N (`round(postH_sa[[4]][1,2],3)` ± `round(postH_sa[[4]][1,3],3)`) que para las del S (`round(postH_sa[[4]][2,2],3)` ± `round(postH_sa[[4]][2,3],3)`), (LSMEANS, t.ratio = -7.056; p_value < 0.0001)
+    
+
 
 
 
