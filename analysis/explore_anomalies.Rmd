@@ -519,24 +519,24 @@ phc <- function(mymodel, resp_var){
   require(lsmeans)
 
   # Disturb Event 
-  ph_event <- lsmeans(mymodel, pairwise ~ disturb_year, adjust = "tukey")
+  ph_event <- lsmeans(mymodel, pairwise ~ disturb_year, adjust = "bon")
   
   # differences letters 
   cld_event <- cld(ph_event, alpha   = 0.01, 
                    Letters = letters, 
-                   adjust  = "tukey")
+                   adjust  = "bon")
   
   # Site  
-  ph_site <- lsmeans(mymodel, pairwise ~ site, adjust = "tukey")
+  ph_site <- lsmeans(mymodel, pairwise ~ site, adjust = "bon")
   cld_site <- cld(ph_site, alpha   = 0.01, 
                  Letters = letters, 
-                 adjust  = "tukey")
+                 adjust  = "bon")
 
   # interaction 
-  ph_i <- lsmeans(mymodel, pairwise ~ disturb_year:site, adjust = "tukey")
+  ph_i <- lsmeans(mymodel, pairwise ~ disturb_year:site, adjust = "bon")
   cld_i <- cld(ph_i, alpha   = 0.01, 
                  Letters = letters, 
-                 adjust  = "tukey")
+                 adjust  = "bon")
   
   # Objets for plot
   aux_ph_site <- as.data.frame(summary(ph_site$lsmeans)) 

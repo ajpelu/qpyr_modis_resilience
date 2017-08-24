@@ -467,24 +467,24 @@ phc <- function(mymodel, resp_var){
   require(lsmeans)
 
   # Disturb Event 
-  ph_event <- lsmeans(mymodel, pairwise ~ disturb_year, adjust = "tukey")
+  ph_event <- lsmeans(mymodel, pairwise ~ disturb_year, adjust = "bon")
   
   # differences letters 
   cld_event <- cld(ph_event, alpha   = 0.01, 
                    Letters = letters, 
-                   adjust  = "tukey")
+                   adjust  = "bon")
   
   # Site  
-  ph_site <- lsmeans(mymodel, pairwise ~ site, adjust = "tukey")
+  ph_site <- lsmeans(mymodel, pairwise ~ site, adjust = "bon")
   cld_site <- cld(ph_site, alpha   = 0.01, 
                  Letters = letters, 
-                 adjust  = "tukey")
+                 adjust  = "bon")
 
   # interaction 
-  ph_i <- lsmeans(mymodel, pairwise ~ disturb_year:site, adjust = "tukey")
+  ph_i <- lsmeans(mymodel, pairwise ~ disturb_year:site, adjust = "bon")
   cld_i <- cld(ph_i, alpha   = 0.01, 
                  Letters = letters, 
-                 adjust  = "tukey")
+                 adjust  = "bon")
   
   # Objets for plot
   aux_ph_site <- as.data.frame(summary(ph_site$lsmeans)) 
@@ -670,16 +670,16 @@ postH_a <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## Results are averaged over the levels of: site 
     ## 
-    ##  disturb_year       lsmean           SE   df     lower.CL     upper.CL
-    ##  2005         -0.034580800 0.0004436606 1820 -0.035573855 -0.033587745
-    ##  2012         -0.007356516 0.0004436606 1820 -0.008349571 -0.006363461
+    ##  disturb_year       lsmean           SE   df     lower.CL    upper.CL
+    ##  2005         -0.034580800 0.0004436606 1820 -0.035576046 -0.03358555
+    ##  2012         -0.007356516 0.0004436606 1820 -0.008351762 -0.00636127
     ##  .group
     ##   a    
     ##    b   
     ## 
     ## Results are averaged over the levels of: site 
     ## Confidence level used: 0.95 
-    ## Conf-level adjustment: sidak method for 2 estimates 
+    ## Conf-level adjustment: bonferroni method for 2 estimates 
     ## significance level used: alpha = 0.01 
     ## 
     ## ### Clu pop ###
@@ -700,15 +700,15 @@ postH_a <- phc(mymodel = mymodel, resp_var = resp_var)
     ## Results are averaged over the levels of: disturb_year 
     ## 
     ##  site                lsmean           SE   df    lower.CL    upper.CL
-    ##  Northern slope -0.02380758 0.0004363026 1820 -0.02478416 -0.02283099
-    ##  Southern slope -0.01812974 0.0004508986 1820 -0.01913899 -0.01712048
+    ##  Northern slope -0.02380758 0.0004363026 1820 -0.02478632 -0.02282884
+    ##  Southern slope -0.01812974 0.0004508986 1820 -0.01914122 -0.01711825
     ##  .group
     ##   a    
     ##    b   
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
-    ## Conf-level adjustment: sidak method for 2 estimates 
+    ## Conf-level adjustment: bonferroni method for 2 estimates 
     ## significance level used: alpha = 0.01 
     ## 
     ## ### Event:Clu pop ###
@@ -742,7 +742,7 @@ postH_a <- phc(mymodel = mymodel, resp_var = resp_var)
     ##    6.746  <.0001
     ##  -17.255  <.0001
     ## 
-    ## P value adjustment: tukey method for comparing a family of 4 estimates
+    ## P value adjustment: bonferroni method for 6 tests
 
 ``` r
 #### ~ Site
@@ -942,12 +942,12 @@ postH_nora <- phc(mymodel = mymodel, resp_var = resp_var)
     ## Results are averaged over the levels of: site 
     ## 
     ##  disturb_year    lsmean         SE   df  lower.CL  upper.CL .group
-    ##  2005         -7.154722 0.08631418 1820 -7.347921 -6.961523  a    
-    ##  2012         -1.361416 0.08631418 1820 -1.554615 -1.168217   b   
+    ##  2005         -7.154722 0.08631418 1820 -7.348347 -6.961097  a    
+    ##  2012         -1.361416 0.08631418 1820 -1.555041 -1.167791   b   
     ## 
     ## Results are averaged over the levels of: site 
     ## Confidence level used: 0.95 
-    ## Conf-level adjustment: sidak method for 2 estimates 
+    ## Conf-level adjustment: bonferroni method for 2 estimates 
     ## significance level used: alpha = 0.01 
     ## 
     ## ### Clu pop ###
@@ -966,12 +966,12 @@ postH_nora <- phc(mymodel = mymodel, resp_var = resp_var)
     ## Results are averaged over the levels of: disturb_year 
     ## 
     ##  site              lsmean         SE   df  lower.CL  upper.CL .group
-    ##  Northern slope -5.088210 0.08488266 1820 -5.278205 -4.898216  a    
-    ##  Southern slope -3.427928 0.08772233 1820 -3.624278 -3.231577   b   
+    ##  Northern slope -5.088210 0.08488266 1820 -5.278624 -4.897797  a    
+    ##  Southern slope -3.427928 0.08772233 1820 -3.624712 -3.231144   b   
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
-    ## Conf-level adjustment: sidak method for 2 estimates 
+    ## Conf-level adjustment: bonferroni method for 2 estimates 
     ## significance level used: alpha = 0.01 
     ## 
     ## ### Event:Clu pop ###
@@ -1005,7 +1005,7 @@ postH_nora <- phc(mymodel = mymodel, resp_var = resp_var)
     ##    5.449  <.0001
     ##  -18.196  <.0001
     ## 
-    ## P value adjustment: tukey method for comparing a family of 4 estimates
+    ## P value adjustment: bonferroni method for 6 tests
 
 ``` r
 #### ~ Site
@@ -1205,12 +1205,12 @@ postH_sa <- phc(mymodel = mymodel, resp_var = resp_var)
     ## Results are averaged over the levels of: site 
     ## 
     ##  disturb_year     lsmean         SE   df   lower.CL   upper.CL .group
-    ##  2005         -2.2845241 0.02909544 1820 -2.3496491 -2.2193992  a    
-    ##  2012         -0.4181652 0.02909544 1820 -0.4832901 -0.3530402   b   
+    ##  2005         -2.2845241 0.02909544 1820 -2.3497927 -2.2192556  a    
+    ##  2012         -0.4181652 0.02909544 1820 -0.4834338 -0.3528966   b   
     ## 
     ## Results are averaged over the levels of: site 
     ## Confidence level used: 0.95 
-    ## Conf-level adjustment: sidak method for 2 estimates 
+    ## Conf-level adjustment: bonferroni method for 2 estimates 
     ## significance level used: alpha = 0.01 
     ## 
     ## ### Clu pop ###
@@ -1231,12 +1231,12 @@ postH_sa <- phc(mymodel = mymodel, resp_var = resp_var)
     ## Results are averaged over the levels of: disturb_year 
     ## 
     ##  site              lsmean         SE   df  lower.CL  upper.CL .group
-    ##  Northern slope -1.496513 0.02861289 1820 -1.560558 -1.432468  a    
-    ##  Southern slope -1.206176 0.02957011 1820 -1.272364 -1.139989   b   
+    ##  Northern slope -1.496513 0.02861289 1820 -1.560699 -1.432327  a    
+    ##  Southern slope -1.206176 0.02957011 1820 -1.272510 -1.139843   b   
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
-    ## Conf-level adjustment: sidak method for 2 estimates 
+    ## Conf-level adjustment: bonferroni method for 2 estimates 
     ## significance level used: alpha = 0.01 
     ## 
     ## ### Event:Clu pop ###
@@ -1270,7 +1270,7 @@ postH_sa <- phc(mymodel = mymodel, resp_var = resp_var)
     ##    7.543  <.0001
     ##  -19.227  <.0001
     ## 
-    ## P value adjustment: tukey method for comparing a family of 4 estimates
+    ## P value adjustment: bonferroni method for 6 tests
 
 ``` r
 #### ~ Site
