@@ -21,13 +21,14 @@ di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', 
 
 
 ```{r packages, warning=FALSE, message=FALSE}
+library("plyr")
+library('dplyr')
+library("scales")
 library('tidyverse')
 ```
 
-# Read data 
 
-* EVI mean dataframe
-
+# Trajectories EVI mean 
 
 ```{r}
 # Read data
@@ -48,8 +49,7 @@ evi <- evi %>%
   filter(clu_pop != 'out')
 ```
 
-
-## Trajectories EVI mean 
+## global 
 
 ```{r}
 traj <- evi %>% group_by(pop, year) %>% 
@@ -87,7 +87,7 @@ traj_plot
 dev.off()
 ```
   
-  
+## by cluster pop 
 
 ```{r}
 traj_mean_pop <- traj %>% 
@@ -131,3 +131,177 @@ pdf(file=paste0(di, "/images/plot_trajectories_evi_clu.pdf"), height = 6, width 
 traj_plot_pop
 dev.off()
 ```
+
+
+# EVI profiles 
+
+
+```{r}
+# Read data
+iv <- read.csv(file=paste(di, "/data/iv_composite.csv", sep=""), header = TRUE, sep = ',')
+```
+
+
+## Prepare data 
+
+```{r}
+evi_profile_dat <- iv %>% 
+  group_by(composite) %>% 
+  dplyr::summarise(mean=mean(evi, na.rm=T),
+            sd = sd(evi, na.rm=T),
+            se = sd/sqrt(length(evi))) %>% 
+  mutate(composite_dates = 
+           plyr::mapvalues(composite,
+                           c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+                           c('01-01','01-17','02-02','02-18','03-06','03-22','04-07','04-23',
+                             '05-09','05-25','06-10','06-26','07-12','07-28','08-13','08-29',
+                             '09-14','09-30','10-16','11-01','11-17','12-03','12-19'))) %>%
+  mutate(cd = as.Date(composite_dates, format = '%m-%d'))
+
+
+ndvi_profile_dat <- iv %>% 
+  group_by(composite) %>% 
+  dplyr::summarise(mean=mean(ndvi, na.rm=TRUE),
+            sd = sd(ndvi, na.rm=TRUE),
+            se = sd/sqrt(length(ndvi))) %>% 
+  mutate(composite_dates = 
+           plyr::mapvalues(composite,
+                           c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+                           c('01-01','01-17','02-02','02-18','03-06','03-22','04-07','04-23',
+                             '05-09','05-25','06-10','06-26','07-12','07-28','08-13','08-29',
+                             '09-14','09-30','10-16','11-01','11-17','12-03','12-19'))) %>%
+  mutate(cd = as.Date(composite_dates, format = '%m-%d'))
+
+```
+
+## Plot EVI profile 
+
+```{r}
+micolor <- '#455883'
+
+evi_profile <- ggplot(evi_profile_dat, aes(cd, y=mean)) + 
+  geom_errorbar(aes(ymin = mean - 10*se, ymax= mean + 10*se), width=4, colour=micolor, size=.8) + 
+  #geom_errorbar(aes(ymin = mean - sd, ymax= mean + sd), width=4, colour='black') +
+  geom_line(colour=micolor, size=.8) + 
+  geom_point(size=3,colour=micolor) +
+  geom_point(size=1.5, colour='white')+
+  scale_x_date(labels = function(x) format(x, "%b"),
+               breaks = date_breaks('month')) + 
+  ylab('EVI') + xlab('Date') + 
+  theme_bw() +
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank()) +
+  theme_classic()
+#format(x, "%d-%b") 
+
+print(evi_profile)
+```  
+
+## Plot NDVI profile 
+
+```{r}
+ndvi_profile <- ggplot(ndvi_profile_dat, aes(cd, y=mean)) + 
+  geom_errorbar(aes(ymin = mean - 10*se, ymax= mean + 10*se), width=4, colour=micolor, size=.8) + 
+  #geom_errorbar(aes(ymin = mean - sd, ymax= mean + sd), width=4, colour='black') +
+  geom_line(colour=micolor, size=.8) + 
+  geom_point(size=3,colour=micolor) +
+  geom_point(size=1.5, colour='white')+
+  scale_x_date(labels = function(x) format(x, "%b"),
+               breaks = date_breaks('month')) + 
+  ylab('NDVI') + xlab('Date') + 
+  theme_bw() +
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank()) +
+  theme_classic()
+#format(x, "%d-%b") 
+
+print(ndvi_profile)
+```  
+
+## Comparing 2005 and 2012 with reference  
+
+```{r}
+drought_years <- c(2005, 2012)
+
+evi_profile_dat_ref <- iv %>% 
+  filter(!year %in% drought_years) %>% 
+  group_by(composite) %>% 
+  dplyr::summarise(mean=mean(evi, na.rm=TRUE),
+            sd = sd(evi, na.rm=TRUE),
+            se = sd/sqrt(length(evi))) %>% 
+  mutate(composite_dates = 
+           plyr::mapvalues(composite,
+                           c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+                           c('01-01','01-17','02-02','02-18','03-06','03-22','04-07','04-23',
+                             '05-09','05-25','06-10','06-26','07-12','07-28','08-13','08-29',
+                             '09-14','09-30','10-16','11-01','11-17','12-03','12-19'))) %>%
+  mutate(cd = as.Date(composite_dates, format = '%m-%d')) %>% 
+  mutate(period = 'reference')
+
+evi_profile_dat_2005 <- iv %>% 
+  filter(year == 2005) %>% 
+  group_by(composite) %>% 
+  dplyr::summarise(mean=mean(evi, na.rm=TRUE),
+            sd = sd(evi, na.rm=TRUE),
+            se = sd/sqrt(length(evi))) %>% 
+  mutate(composite_dates = 
+           plyr::mapvalues(composite,
+                           c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+                           c('01-01','01-17','02-02','02-18','03-06','03-22','04-07','04-23',
+                             '05-09','05-25','06-10','06-26','07-12','07-28','08-13','08-29',
+                             '09-14','09-30','10-16','11-01','11-17','12-03','12-19'))) %>%
+  mutate(cd = as.Date(composite_dates, format = '%m-%d')) %>% 
+  mutate(period = '2005')
+
+evi_profile_dat_2012 <- iv %>% 
+  filter(year == 2012) %>% 
+  group_by(composite) %>% 
+  dplyr::summarise(mean=mean(evi, na.rm=TRUE),
+            sd = sd(evi, na.rm=TRUE),
+            se = sd/sqrt(length(evi))) %>% 
+  mutate(composite_dates = 
+           plyr::mapvalues(composite,
+                           c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+                           c('01-01','01-17','02-02','02-18','03-06','03-22','04-07','04-23',
+                             '05-09','05-25','06-10','06-26','07-12','07-28','08-13','08-29',
+                             '09-14','09-30','10-16','11-01','11-17','12-03','12-19'))) %>%
+  mutate(cd = as.Date(composite_dates, format = '%m-%d')) %>% 
+  mutate(period = '2012')
+
+# Join the three dataframes
+evi_profile_compara_dat <- rbind(evi_profile_dat_ref, evi_profile_dat_2005, evi_profile_dat_2012)
+```
+
+```{r}
+# colref <- '#455883'
+# colref2 <- '#10253F'
+# col2005 <- '#00BA38'
+# col2012 <- '#F8766D'
+
+col2012 <- '#0700fe'
+col2005 <- '#19e00b'
+colref <- '#7b7b7b'
+
+
+profile_compara <- ggplot(evi_profile_compara_dat, aes(cd, y=mean, color=period)) + 
+  geom_errorbar(aes(ymin = mean - 2*se, ymax= mean + 2*se), width=3, size=.5) + 
+  #geom_errorbar(aes(ymin = mean - sd, ymax= mean + sd), width=4, colour='black') + 
+  geom_line(size=.9) + 
+  geom_point(size=3, fill='white', shape=21) +
+  scale_x_date(labels = function(x) format(x, "%b"),
+               breaks = date_breaks('month')) + 
+  ylab('EVI') + xlab('Date') + 
+  theme_bw() +
+  theme_classic() + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank()) +
+  scale_color_manual(values=c(col2005, col2012, colref))
+
+#format(x, "%d-%b") 
+
+pdf(file=paste0(di, "/images/plot_evi_profiles_compara.pdf"), height = 8, width = 12)
+profile_compara
+dev.off()
+```  
+
+
