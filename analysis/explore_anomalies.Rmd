@@ -32,6 +32,9 @@ library("reshape2")
 library("purrr")
 # library("pander")
 library("knitr")
+library("effects")
+library("pander")
+library("broom")
 ```
 
 ## Read data and Prepare Data 
@@ -468,7 +471,264 @@ exportpdf(mypdf=paste0(di, '/images/raster_maps/anomaly_2005_2012_sa.pdf'), lp)
 
 
 
-#### Nota
+### Analisis de diferencias year y clu para las anomalias 
+
+* Preparo un dataframe. Solamente selecciono los años 2005 y 2012 (distrub year)
+
+```{r}
+compara_anoma <- anomalias_evimean %>% 
+  filter(y %in% c(2005,2012)) %>% 
+  mutate(y = as.factor(y)) %>% 
+  rename(disturb_year = y, 
+         site = clu_pop2)
+```
+
+
+* Incluyo dos funciones customizadas para analizar las anovas y posthoc comparison 
+
+```{r}
+# Custom Function to compute ANOVAS
+aovas <- function(df, vars, resp_var){ 
+  require('dplyr')
+  require('broom')
+  
+  # Create subset 
+  dfsel <- df %>% dplyr::select_(.dots=c(vars, resp_var)) 
+    
+  # Model 
+  myformula <- as.formula(paste0(resp_var,  " ~ ",
+                                 paste(vars, collapse = '*')))
+  
+  mymodel <- aov(myformula, data=dfsel)
+  
+  # Output model Summary http://my.ilstu.edu/~wjschne/444/ANOVA.html#(1)
+  model_coeff <- broom::tidy(mymodel)
+  model_summary <- broom::glance(mymodel)
+  
+  out <- c() 
+  out$model_coeff <- model_coeff
+  out$model_summary <- model_summary
+  out$mymodel <- mymodel
+  
+  return(out)
+}
+
+
+# Post-Hoc comparison
+phc <- function(mymodel, resp_var){
+  require(lsmeans)
+
+  # Disturb Event 
+  ph_event <- lsmeans(mymodel, pairwise ~ disturb_year, adjust = "tukey")
+  
+  # differences letters 
+  cld_event <- cld(ph_event, alpha   = 0.01, 
+                   Letters = letters, 
+                   adjust  = "tukey")
+  
+  # Site  
+  ph_site <- lsmeans(mymodel, pairwise ~ site, adjust = "tukey")
+  cld_site <- cld(ph_site, alpha   = 0.01, 
+                 Letters = letters, 
+                 adjust  = "tukey")
+
+  # interaction 
+  ph_i <- lsmeans(mymodel, pairwise ~ disturb_year:site, adjust = "tukey")
+  cld_i <- cld(ph_i, alpha   = 0.01, 
+                 Letters = letters, 
+                 adjust  = "tukey")
+  
+  # Objets for plot
+  aux_ph_site <- as.data.frame(summary(ph_site$lsmeans)) 
+  aux_ph_site <- aux_ph_site %>% mutate(var = resp_var)
+  aux_ph_event <- as.data.frame(summary(ph_event$lsmeans)) 
+  aux_ph_event <- aux_ph_event %>% mutate(var = resp_var)
+  aux_ph_i <- as.data.frame(summary(ph_i$lsmeans)) 
+  aux_ph_i <- aux_ph_i %>% mutate(var = resp_var)
+  
+  # Return objects
+  cat('\n### Event ###\n')
+  print(ph_event)
+  print(cld_event)
+  cat('\n### Clu pop ###\n')
+  print(ph_site)
+  print(cld_site)
+  cat('\n### Event:Clu pop ###\n')
+  print(ph_i)
+  return(list(aux_ph_site, aux_ph_event, aux_ph_i, cld_site, cld_event, cld_i))
+}
+```
+
+
+#### Compara Anomaly (a)
+```{r}
+resp_var <- 'a'
+vars <- c('disturb_year','site')
+
+# AOV
+aov_a <- aovas(compara_anoma, vars=vars, resp_var = resp_var)
+
+mc <- aov_a$model_coeff
+
+pander(mc, round=5,
+       caption = paste0("ANOVA table: ", resp_var), missing = '', 
+       emphasize.strong.cells = 
+         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
+
+gm <- aov_a$model_summary
+
+gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
+colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
+rownames(gm) <- "Statistic"
+pander(t(gm)) 
+
+
+# Post hoc Define model
+mymodel <- aov_a$mymodel
+postH_a <- phc(mymodel = mymodel, resp_var = resp_var)
+```
+
+```{r}
+#### ~ Site
+ps <- plot(effect("site",mymodel))
+#### ~ Disturb Year
+pd <- plot(effect('disturb_year', mymodel))
+#### Disturb Year:Site
+picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
+pi <- plot(effect("disturb_year:site",mymodel), layout=c(3,1))
+
+``` 
+
+```{r}
+ps
+```
+
+```{r}
+pd
+```
+
+```{r}
+picollapse
+```
+
+```{r}
+pi
+```
+
+
+
+#### Compara Normalized Anomaly (nora)
+```{r}
+resp_var <- 'nora'
+vars <- c('disturb_year','site')
+
+# AOV
+aov_nora <- aovas(compara_anoma, vars=vars, resp_var = resp_var)
+
+mc <- aov_nora$model_coeff
+
+pander(mc, round=5,
+       caption = paste0("ANOVA table: ", resp_var), missing = '', 
+       emphasize.strong.cells = 
+         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
+
+gm <- aov_nora$model_summary
+
+gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
+colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
+rownames(gm) <- "Statistic"
+pander(t(gm)) 
+
+
+# Post hoc Define model
+mymodel <- aov_nora$mymodel
+postH_nora <- phc(mymodel = mymodel, resp_var = resp_var)
+```
+
+```{r}
+#### ~ Site
+ps <- plot(effect("site",mymodel))
+#### ~ Disturb Year
+pd <- plot(effect('disturb_year', mymodel))
+#### Disturb Year:Site
+picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
+pi <- plot(effect("disturb_year:site",mymodel), layout=c(3,1))
+
+``` 
+
+```{r}
+ps
+```
+
+```{r}
+pd
+```
+
+```{r}
+picollapse
+```
+
+```{r}
+pi
+```
+
+#### Compara Standardized Anomaly (sa)
+```{r}
+resp_var <- 'sa'
+vars <- c('disturb_year','site')
+
+# AOV
+aov_sa <- aovas(compara_anoma, vars=vars, resp_var = resp_var)
+
+mc <- aov_sa$model_coeff
+
+pander(mc, round=5,
+       caption = paste0("ANOVA table: ", resp_var), missing = '', 
+       emphasize.strong.cells = 
+         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
+
+gm <- aov_sa$model_summary
+
+gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
+colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
+rownames(gm) <- "Statistic"
+pander(t(gm)) 
+
+
+# Post hoc Define model
+mymodel <- aov_sa$mymodel
+postH_sa <- phc(mymodel = mymodel, resp_var = resp_var)
+```
+
+```{r}
+#### ~ Site
+ps <- plot(effect("site",mymodel))
+#### ~ Disturb Year
+pd <- plot(effect('disturb_year', mymodel))
+#### Disturb Year:Site
+picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
+pi <- plot(effect("disturb_year:site",mymodel), layout=c(3,1))
+
+``` 
+
+```{r}
+ps
+```
+
+```{r}
+pd
+```
+
+```{r}
+picollapse
+```
+
+```{r}
+pi
+```
+
+
+#### Plot de trayectoria de las anomalías 
 * Idea de plot de la media y la varianza (Trayectoria). Relacionado con las métricas de estabilidad (com. personal. Paula Escribano) (:red_circle: analizar mejor)
 
 
