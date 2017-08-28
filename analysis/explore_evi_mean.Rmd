@@ -49,7 +49,7 @@ evi <- evi %>%
   filter(clu_pop != 'out')
 ```
 
-## global 
+## global 
 
 ```{r}
 traj <- evi %>% group_by(pop, year) %>% 
