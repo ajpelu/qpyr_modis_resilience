@@ -1,12 +1,12 @@
 [general]
 creator=R package 'raster'
-created=2017-08-28 13:48:38
+created=2017-08-28 18:16:25
 [georeference]
 nrows=113
-ncols=127
+ncols=89
 xmin=456456.116532875
 ymin=4088182.25881063
-xmax=488206.116532875
+xmax=478706.116532875
 ymax=4116432.25881063
 projection=+init=epsg:23030 +proj=utm +zone=30 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs
 [data]

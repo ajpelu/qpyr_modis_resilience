@@ -13,8 +13,8 @@ opts_chunk$set(fig.align='center', fig.width = 14, message = FALSE, warning = FA
 
 ```{r wd, echo=FALSE}
 #---------------------------------
-machine <- 'ajpelu'
-# machine <- 'ajpeluLap'
+#machine <- 'ajpelu'
+machine <- 'ajpeluLap'
 di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
 #---------------------------------
 ```
@@ -38,13 +38,14 @@ iv <- read.csv(file=paste(di, "/data/evi_mean.csv", sep=""), header = TRUE, sep 
 
 
 ```{r}
-ivtrend <- iv %>% dplyr::select(iv_malla_modi_id, year, evi)
+## ojo filtramos por pop (quitmos 9 pop)
+ivtrend <- iv %>% filter(pop != 9) %>% dplyr::select(iv_malla_modi_id, year, evi)
 ```
 
 
 ```{r}
 
-pixel <- unique(iv$iv_malla_modi_id)
+pixel <- unique(ivtrend$iv_malla_modi_id)
 
 out <- data.frame()
 
@@ -85,6 +86,7 @@ mk_evi  <- out %>% inner_join(iv_att, by = 'iv_malla_modi_id')
 
 
 ## Explore results Trends 
+
 ```{r}
 mk_per <- exploreMKTS(mk_evi, alpha=0.05) 
 mk_per$summary %>% kable()
@@ -175,10 +177,10 @@ lp <- levelplot(stack_trends_re,
 
 print(lp)
 
-#tiff(filename=paste0(di, '/images/raster_maps/trends_evi_tau_.tiff'), 
-#     height = 1600, width = 2500, res=150, pointsize = 20, bg='transparent')
-#print(lp)
-#dev.off() 
+tiff(filename=paste0(di, '/images/raster_maps/trends_evi_tau_.tiff'), 
+     height = 1600, width = 2500, res=150, pointsize = 20, bg='transparent')
+print(lp)
+dev.off() 
 ```
 
 ```{r}

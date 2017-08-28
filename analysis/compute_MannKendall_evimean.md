@@ -14,11 +14,12 @@ iv <- read.csv(file=paste(di, "/data/evi_mean.csv", sep=""), header = TRUE, sep 
 ```
 
 ``` r
-ivtrend <- iv %>% dplyr::select(iv_malla_modi_id, year, evi)
+## ojo filtramos por pop (quitmos 9 pop)
+ivtrend <- iv %>% filter(pop != 9) %>% dplyr::select(iv_malla_modi_id, year, evi)
 ```
 
 ``` r
-pixel <- unique(iv$iv_malla_modi_id)
+pixel <- unique(ivtrend$iv_malla_modi_id)
 
 out <- data.frame()
 
@@ -67,11 +68,11 @@ mk_per$summary %>% kable()
 
 | variable      | n\_pixel | pct\_pixel |
 |:--------------|:---------|:-----------|
-| tau\_pos      | 733      | 78.99      |
-| tau\_pos\_sig | 232      | 31.65      |
-| tau\_neg      | 183      | 19.72      |
-| tau\_neg\_sig | 10       | 5.46       |
-| tau\_0        | 12       | 1.29       |
+| tau\_pos      | 720      | 78.95      |
+| tau\_pos\_sig | 228      | 31.67      |
+| tau\_neg      | 180      | 19.74      |
+| tau\_neg\_sig | 10       | 5.56       |
+| tau\_0        | 12       | 1.32       |
 
 ``` r
 mk_evi <- mk_evi %>% mutate(sig = ifelse(p_value < 0.05, 'sig', 'nosig'))
@@ -163,11 +164,14 @@ print(lp)
 <img src="compute_MannKendall_evimean_files/figure-markdown_github/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
 
 ``` r
-#tiff(filename=paste0(di, '/images/raster_maps/trends_evi_tau_.tiff'), 
-#     height = 1600, width = 2500, res=150, pointsize = 20, bg='transparent')
-#print(lp)
-#dev.off() 
+tiff(filename=paste0(di, '/images/raster_maps/trends_evi_tau_.tiff'), 
+     height = 1600, width = 2500, res=150, pointsize = 20, bg='transparent')
+print(lp)
+dev.off() 
 ```
+
+    ## quartz_off_screen 
+    ##                 2
 
 ``` r
 lp <- levelplot(stack_trends_re, 
