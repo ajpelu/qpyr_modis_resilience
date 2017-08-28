@@ -1,0 +1,111 @@
+---
+title: "Compute Resilience EVI"
+author: "AJ Perez-Luque (@ajpelu)"
+date: "2017 Aug"
+output:  
+  md_document:
+    variant: markdown_github
+---
+```{r, echo=FALSE, message=FALSE}
+require(knitr)
+opts_chunk$set(fig.align='center', fig.width = 14, message = FALSE, warning = FALSE) 
+```
+
+```{r wd, echo=FALSE}
+#---------------------------------
+machine <- 'ajpelu'
+# machine <- 'ajpeluLap'
+di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
+#---------------------------------
+```
+
+
+```{r packages, warning=FALSE, message=FALSE}
+library('tidyverse')
+```
+
+
+```{r}
+# Read data
+iv <- read.csv(file=paste(di, "/data/evi_mean.csv", sep=""), header = TRUE, sep = ',')
+```
+
+```{r}
+
+
+## Compute Resilience of BAI 
+
+## Resilience metrics: See Lloret et al. 2011 http://dx.doi.org/10.1111/j.1600-0706.2011.19372.x
+## bai_object: an object of bai (dplR)
+## event_years: vector with drought years, i.e.: c(1995, 2005)
+## window: size of the window to compute previous and post event segments 
+
+## A list with  to df 
+## $growth: summary statistics by tree of BAI for each period (prev, dr, post)
+## $resilience: resilience metrics for each drougth period 
+
+
+
+eviResilience <- function(df, event_years, window){ 
+  
+  out_evi <- c() 
+  out_res <- c() 
+  out <- list()
+
+  for (i in event_years){
+    # Create df previous, during and post event
+    df_pre <- df %>% filter(year < i & year >= (i - window)) %>% mutate(disturb = 'pre')
+    df_event <- df %>% filter(year == i) %>% mutate(disturb = 'dr')
+    df_post <- df %>% filter(year > i & year <= (i + window)) %>% mutate(disturb = 'post')
+    
+    # Melt data 
+    dfmelt <- bind_rows(df_pre, df_event, df_post) %>% 
+      gather(variable, value, -disturb, -year, -iv_malla_modi_id)
+    
+    # Compute mean of Growth (previous, during and posterior)
+    evi_df <- dfmelt %>% group_by(disturb, iv_malla_modi_id) %>% 
+      summarise(mean_period = mean(value, na.rm=TRUE),
+                sd_period = sd(value, na.rm=TRUE),
+                se_period = sd_period/sqrt(length(value))) %>% 
+      mutate(disturb_year = i) %>% as.data.frame() 
+    
+    out_evi <- rbind(out_evi, evi_df)
+    
+    # Compute resilience by pixel 
+    aux_resilience <- c() 
+    pixels <- unique(evi_df$iv_malla_modi_id)
+    
+    for (t in pixels){
+      # Filter by tree
+      df_pixel <- evi_df %>% filter(iv_malla_modi_id == t) 
+      
+      # Compute resilience metrics by pixel
+      aux_df <- df_pixel %>% select(-c(iv_malla_modi_id, sd_period, se_period)) %>% 
+        spread(key=disturb, value=mean_period) %>% 
+        mutate(rt = dr / pre,
+               rc = post / dr,
+               rs = post / pre,
+               rrs = ((post - dr) / pre),
+               iv_malla_modi_id = t) %>% 
+        select(rt, rc, rs, rrs, disturb_year, iv_malla_modi_id) %>% as.data.frame() 
+      
+      aux_resilience <- rbind(aux_resilience, aux_df)
+    }
+    
+    out_res <- rbind(out_res, aux_resilience)
+  }
+  
+  out$evi <- out_evi
+  out$resilience <- out_res
+  
+  return(out)
+}
+
+
+
+evi <- iv %>% dplyr::select(-n_composites, -long, -lat, -pop)
+dyears <- c(2005, 2012)
+
+res_4_sj <- eviResilience(evi, event_years = dyears, window = 4)
+
+```
