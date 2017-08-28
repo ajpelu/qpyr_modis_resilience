@@ -290,3 +290,14 @@ aux_coefs %>% pander()
 </tr>
 </tbody>
 </table>
+
+\*\* NOS QUEDAMOS CON 3 AÑOS COMO VENTANA TEMPORAL\*\*
+
+Export and save
+---------------
+
+``` r
+# Export csv 
+write.csv(res3$evi, file=paste0(di, '/data/resilience/evi_period.csv'), row.names = FALSE)
+write.csv(res3$resilience, file=paste0(di, '/data/resilience/resiliences.csv'), row.names = FALSE)
+```
