@@ -560,7 +560,7 @@ phc <- function(mymodel, resp_var){
 ```
 
 
-#### Compara Anomaly (a)
+#### Compara Anomaly (a)
 ```{r}
 resp_var <- 'a'
 vars <- c('disturb_year','site')

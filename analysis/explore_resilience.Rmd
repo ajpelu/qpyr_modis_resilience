@@ -27,6 +27,7 @@ library('broom')
 library('pander')
 library('lsmeans')
 library('effects')
+library('gridExtra')
 ```
 
 # Prepare data 
@@ -251,6 +252,244 @@ picollapse
 
 ```{r}
 pi
+```
+
+### Resilience 
+```{r}
+# Variable
+resp_var <- 'rs'
+
+vars <- c('disturb_year','site')
+
+# AOV
+aov_rs <- aovas(evires, vars=vars, resp_var = resp_var)
+
+mc <- aov_rs$model_coeff
+
+pander(mc, round=5,
+       caption = paste0("ANOVA table: ", resp_var), missing = '', 
+       emphasize.strong.cells = 
+         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
+
+gm <- aov_rs$model_summary
+
+gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
+colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
+rownames(gm) <- "Statistic"
+pander(t(gm)) 
+
+
+# Post hoc Define model
+mymodel <- aov_rs$mymodel
+postH_rs <- phc(mymodel = mymodel, resp_var = resp_var)
+```
+
+```{r}
+#### ~ Site
+ps <- plot(effect("site",mymodel))
+#### ~ Disturb Year
+pd <- plot(effect('disturb_year', mymodel))
+#### Disturb Year:Site
+picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
+pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
+
+``` 
+
+```{r}
+ps
+```
+
+```{r}
+pd
+```
+
+```{r}
+picollapse
+```
+
+```{r}
+pi
+```
+
+
+### Relative Resilience
+```{r}
+# Variable
+resp_var <- 'rrs'
+
+vars <- c('disturb_year','site')
+
+# AOV
+aov_rrs <- aovas(evires, vars=vars, resp_var = resp_var)
+
+mc <- aov_rrs$model_coeff
+
+pander(mc, round=5,
+       caption = paste0("ANOVA table: ", resp_var), missing = '', 
+       emphasize.strong.cells = 
+         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
+
+gm <- aov_rrs$model_summary
+
+gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
+colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
+rownames(gm) <- "Statistic"
+pander(t(gm)) 
+
+
+# Post hoc Define model
+mymodel <- aov_rrs$mymodel
+postH_rrs <- phc(mymodel = mymodel, resp_var = resp_var)
+```
+
+```{r}
+#### ~ Site
+ps <- plot(effect("site",mymodel))
+#### ~ Disturb Year
+pd <- plot(effect('disturb_year', mymodel))
+#### Disturb Year:Site
+picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
+pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
+
+``` 
+
+```{r}
+ps
+```
+
+```{r}
+pd
+```
+
+```{r}
+picollapse
+```
+
+```{r}
+pi
+```
+
+
+```{r}
+means_site <- postH_rc[[4]] %>% mutate(var = 'rc') %>% 
+  bind_rows(postH_rt[[4]] %>% mutate(var = 'rt')) %>% 
+  bind_rows(postH_rs[[4]] %>% mutate(var = 'rs')) %>% 
+  bind_rows(postH_rrs[[4]] %>% mutate(var = 'rrs')) %>% 
+  rename(letras = .group)
+
+means_disturb <- postH_rc[[5]] %>% mutate(var = 'rc') %>% 
+  bind_rows(postH_rt[[5]] %>% mutate(var = 'rt')) %>% 
+  bind_rows(postH_rs[[5]] %>% mutate(var = 'rs')) %>% 
+  bind_rows(postH_rrs[[5]] %>% mutate(var = 'rrs')) %>% 
+  rename(letras = .group)
+
+means_distub_site <- postH_rc[[6]] %>% mutate(var = 'rc') %>% 
+  bind_rows(postH_rt[[6]] %>% mutate(var = 'rt')) %>% 
+  bind_rows(postH_rs[[6]] %>% mutate(var = 'rs')) %>% 
+  bind_rows(postH_rrs[[6]] %>% mutate(var = 'rrs')) %>% 
+  rename(letras = .group)
+```
+
+
+```{r}
+dodge <- position_dodge(width = 0.3)
+micolor <- '#455883'
+mierrorbarSE <- aes(ymin=lsmean - SE, ymax=lsmean + SE)
+mierrorbar <- aes(ymin=lower.CL, ymax=upper.CL)
+```
+
+```{r}
+plot_ms <- means_site %>%  
+  ggplot(aes(x=site, y=lsmean)) + 
+  geom_point(colour=micolor, 
+             size=3, position = dodge) +
+  theme_bw() + xlab('') + ylab('') + 
+  facet_wrap(~var, scales='free_y', ncol = 1) +
+  geom_text(aes(y=lsmean, label=letras), nudge_x = 0.15) +
+  theme(strip.background = element_rect(colour = "black", fill = "white"))
+
+plot_msSE <- plot_ms + geom_errorbar(mierrorbarSE,color=micolor, 
+                                     size=.5, width=.15, position = dodge) 
+
+plot_msCI <- plot_ms + geom_errorbar(mierrorbar,color=micolor, 
+                                     size=.5, width=.15, position = dodge)
+```
+
+
+```{r}
+plot_md <- means_disturb %>%  
+  ggplot(aes(x=disturb_year, y=lsmean)) + 
+  geom_point(colour=micolor, 
+             size=3, position = dodge) +
+  theme_bw() + xlab('') + ylab('') + 
+  facet_wrap(~var, scales='free_y', ncol = 1) +
+  geom_text(aes(y=lsmean, label=letras), nudge_x = 0.15) +
+  theme(strip.background = element_rect(colour = "black", fill = "white"))
+
+
+plot_mdSE <- plot_md + geom_errorbar(mierrorbarSE,color=micolor, 
+                                     size=.5, width=.15, position = dodge) 
+
+plot_mdCI <- plot_md + geom_errorbar(mierrorbar,color=micolor, 
+                                     size=.5, width=.15, position = dodge)
+```
+
+```{r}
+plot_mds <- means_distub_site %>%  
+  ggplot(aes(x=site, y=lsmean, group=disturb_year, colour=disturb_year)) + 
+  geom_point(aes(shape=disturb_year), size=3) + 
+  geom_line() +
+  theme_bw() + xlab('') + ylab('') + 
+  facet_wrap(~var, scales='free_y', ncol = 1) +
+  geom_text(aes(y=lsmean+SE, label=letras), nudge_x = 0.15)+
+  theme(strip.background = element_rect(colour = "black", fill = "white"),
+        legend.position = c(0.8, 0.93),
+        legend.background = element_blank()) +
+  scale_colour_manual(values = c(micolor, "red")) 
+
+
+plot_mdsSE <- plot_mds + geom_errorbar(mierrorbarSE, size=.5, width=.15)
+plot_mdsCI <- plot_mds + geom_errorbar(mierrorbar, size=.5, width=.15)
+```
+
+
+```{r}
+pdf(paste0(di, '/images/resilience/interaction_plotsSE.pdf'), width=9, height = 9)
+grid.arrange(plot_mdSE, plot_msSE, plot_mdsSE, ncol=3)
+dev.off()
+
+pdf(paste0(di, '/images/resilience/interaction_plotsCI.pdf'), width=9, height = 9)
+grid.arrange(plot_mdCI, plot_msCI, plot_mdsCI, ncol=3)
+dev.off()
+
+```
+
+```{r}
+aovas_coeff <- aov_rc$model_coeff %>% mutate(var = 'rc') %>% 
+  bind_rows(aov_rt$model_coeff %>% mutate(var = 'rt')) %>% 
+  bind_rows(aov_rs$model_coeff %>% mutate(var = 'rs')) %>% 
+  bind_rows(aov_rrs$model_coeff%>% mutate(var = 'rrs')) 
+
+write.csv(aovas_coeff, file=paste0(di, '/out/anovas_resilience/anovas_statistics.csv'), row.names = F)
+
+aovas_coeff %>% pander()
+```
+
+```{r}
+aovas_model_summary <- aov_rc$model_summary %>% mutate(var = 'rc') %>% 
+  bind_rows(aov_rt$model_summary %>% mutate(var = 'rt')) %>% 
+  bind_rows(aov_rs$model_summary %>% mutate(var = 'rs')) %>% 
+  bind_rows(aov_rrs$model_summary%>% mutate(var = 'rrs')) 
+
+write.csv(aovas_model_summary, 
+          file=paste0(di, '/out/anovas_resilience/anovas_summary_modelos.csv'), row.names = F)
+
+
+gm <- apply(aovas_model_summary, 1, formatC, digits = 2, format = "f") 
+rownames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e", "variable"),"$")
+colnames(gm) <- c("rc", "rt", "rs", "rrs")
+
+pander(gm)
 ```
 
 
