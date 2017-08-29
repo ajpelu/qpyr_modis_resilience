@@ -1,13 +1,3 @@
-``` r
-library('dplyr')
-library('tidyverse')
-library('broom')
-library('pander')
-library('lsmeans')
-library('effects')
-library('gridExtra')
-```
-
 Prepare data
 ============
 
@@ -43,106 +33,18 @@ evires <- evires %>% rename(site = clu_pop2) %>%
   mutate(disturb_year = as.factor(disturb_year))
 ```
 
-``` r
-# Custom Function to compute ANOVAS
-aovas <- function(df, vars, resp_var){ 
-  require('dplyr')
-  require('broom')
-  
-  # Create subset 
-  dfsel <- df %>% dplyr::select_(.dots=c(vars, resp_var)) 
-    
-  # Model 
-  myformula <- as.formula(paste0(resp_var,  " ~ ",
-                                 paste(vars, collapse = '*')))
-  
-  mymodel <- aov(myformula, data=dfsel)
-  
-  # Output model Summary http://my.ilstu.edu/~wjschne/444/ANOVA.html#(1)
-  model_coeff <- broom::tidy(mymodel)
-  model_summary <- broom::glance(mymodel)
-  
-  out <- c() 
-  out$model_coeff <- model_coeff
-  out$model_summary <- model_summary
-  out$mymodel <- mymodel
-  
-  return(out)
-}
-
-
-# Post-Hoc comparison
-phc <- function(mymodel, resp_var){
-  require(lsmeans)
-
-  # Disturb Event 
-  ph_event <- lsmeans(mymodel, pairwise ~ disturb_year, adjust = "bon")
-  
-  # differences letters 
-  cld_event <- cld(ph_event, alpha   = 0.01, 
-                   Letters = letters, 
-                   adjust  = "bon")
-  
-  # Site  
-  ph_site <- lsmeans(mymodel, pairwise ~ site, adjust = "bon")
-  cld_site <- cld(ph_site, alpha   = 0.01, 
-                 Letters = letters, 
-                 adjust  = "bon")
-
-  # interaction 
-  ph_i <- lsmeans(mymodel, pairwise ~ disturb_year:site, adjust = "bon")
-  cld_i <- cld(ph_i, alpha   = 0.01, 
-                 Letters = letters, 
-                 adjust  = "bon")
-  
-  # Objets for plot
-  aux_ph_site <- as.data.frame(summary(ph_site$lsmeans)) 
-  aux_ph_site <- aux_ph_site %>% mutate(var = resp_var)
-  aux_ph_event <- as.data.frame(summary(ph_event$lsmeans)) 
-  aux_ph_event <- aux_ph_event %>% mutate(var = resp_var)
-  aux_ph_i <- as.data.frame(summary(ph_i$lsmeans)) 
-  aux_ph_i <- aux_ph_i %>% mutate(var = resp_var)
-  
-  # Return objects
-  cat('\n### Event ###\n')
-  print(ph_event)
-  print(cld_event)
-  cat('\n### Clu pop ###\n')
-  print(ph_site)
-  print(cld_site)
-  cat('\n### Event:Clu pop ###\n')
-  print(ph_i)
-  return(list(aux_ph_site, aux_ph_event, aux_ph_i, cld_site, cld_event, cld_i))
-}
-```
-
 ANOVAs
 ------
 
 ### Recovery
 
-``` r
-resp_var <- 'rc'
-vars <- c('disturb_year','site')
-
-# AOV
-aov_rc <- aovas(evires, vars=vars, resp_var = resp_var)
-
-mc <- aov_rc$model_coeff
-
-pander(mc, round=5,
-       caption = paste0("ANOVA table: ", resp_var), missing = '', 
-       emphasize.strong.cells = 
-         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
-```
-
-<table style="width:93%;">
+<table style="width:85%;">
 <caption>ANOVA table: rc</caption>
 <colgroup>
-<col width="27%" />
-<col width="9%" />
+<col width="25%" />
+<col width="6%" />
+<col width="11%" />
 <col width="12%" />
-<col width="13%" />
 <col width="16%" />
 <col width="12%" />
 </colgroup>
@@ -191,15 +93,6 @@ pander(mc, round=5,
 </tr>
 </tbody>
 </table>
-
-``` r
-gm <- aov_rc$model_summary
-
-gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
-colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
-rownames(gm) <- "Statistic"
-pander(t(gm)) 
-```
 
 <table style="width:49%;">
 <colgroup>
@@ -346,65 +239,38 @@ postH_rc <- phc(mymodel = mymodel, resp_var = resp_var)
     ## P value adjustment: bonferroni method for 6 tests
 
 ``` r
-#### ~ Site
-ps <- plot(effect("site",mymodel))
-#### ~ Disturb Year
-pd <- plot(effect('disturb_year', mymodel))
-#### Disturb Year:Site
-picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
-pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
-```
-
-``` r
 ps
-```
-
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
-
-``` r
-pd
 ```
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
 
 ``` r
-picollapse
+pd
 ```
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
 
 ``` r
-pi
+picollapse
 ```
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
 
-### Resistance
-
 ``` r
-# Variable
-resp_var <- 'rt'
-
-vars <- c('disturb_year','site')
-
-# AOV
-aov_rt <- aovas(evires, vars=vars, resp_var = resp_var)
-
-mc <- aov_rt$model_coeff
-
-pander(mc, round=5,
-       caption = paste0("ANOVA table: ", resp_var), missing = '', 
-       emphasize.strong.cells = 
-         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
+pi
 ```
 
-<table style="width:93%;">
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+
+### Resistance
+
+<table style="width:85%;">
 <caption>ANOVA table: rt</caption>
 <colgroup>
-<col width="27%" />
-<col width="9%" />
+<col width="25%" />
+<col width="6%" />
+<col width="11%" />
 <col width="12%" />
-<col width="13%" />
 <col width="16%" />
 <col width="12%" />
 </colgroup>
@@ -453,15 +319,6 @@ pander(mc, round=5,
 </tr>
 </tbody>
 </table>
-
-``` r
-gm <- aov_rt$model_summary
-
-gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
-colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
-rownames(gm) <- "Statistic"
-pander(t(gm)) 
-```
 
 <table style="width:49%;">
 <colgroup>
@@ -613,67 +470,40 @@ postH_rt <- phc(mymodel = mymodel, resp_var = resp_var)
     ## P value adjustment: bonferroni method for 6 tests
 
 ``` r
-#### ~ Site
-ps <- plot(effect("site",mymodel))
-#### ~ Disturb Year
-pd <- plot(effect('disturb_year', mymodel))
-#### Disturb Year:Site
-picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
-pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
-```
-
-``` r
 ps
-```
-
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-12-1.png" style="display: block; margin: auto;" />
-
-``` r
-pd
-```
-
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-13-1.png" style="display: block; margin: auto;" />
-
-``` r
-picollapse
 ```
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-14-1.png" style="display: block; margin: auto;" />
 
 ``` r
-pi
+pd
 ```
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-15-1.png" style="display: block; margin: auto;" />
 
-### Resilience
-
 ``` r
-# Variable
-resp_var <- 'rs'
-
-vars <- c('disturb_year','site')
-
-# AOV
-aov_rs <- aovas(evires, vars=vars, resp_var = resp_var)
-
-mc <- aov_rs$model_coeff
-
-pander(mc, round=5,
-       caption = paste0("ANOVA table: ", resp_var), missing = '', 
-       emphasize.strong.cells = 
-         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
+picollapse
 ```
 
-<table style="width:100%;">
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-16-1.png" style="display: block; margin: auto;" />
+
+``` r
+pi
+```
+
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-17-1.png" style="display: block; margin: auto;" />
+
+### Resilience
+
+<table style="width:89%;">
 <caption>ANOVA table: rs</caption>
 <colgroup>
-<col width="27%" />
-<col width="9%" />
-<col width="13%" />
-<col width="13%" />
+<col width="25%" />
+<col width="6%" />
+<col width="11%" />
+<col width="12%" />
 <col width="16%" />
-<col width="18%" />
+<col width="16%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -720,15 +550,6 @@ pander(mc, round=5,
 </tr>
 </tbody>
 </table>
-
-``` r
-gm <- aov_rs$model_summary
-
-gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
-colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
-rownames(gm) <- "Statistic"
-pander(t(gm)) 
-```
 
 <table style="width:49%;">
 <colgroup>
@@ -880,65 +701,38 @@ postH_rs <- phc(mymodel = mymodel, resp_var = resp_var)
     ## P value adjustment: bonferroni method for 6 tests
 
 ``` r
-#### ~ Site
-ps <- plot(effect("site",mymodel))
-#### ~ Disturb Year
-pd <- plot(effect('disturb_year', mymodel))
-#### Disturb Year:Site
-picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
-pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
-```
-
-``` r
 ps
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-18-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-21-1.png" style="display: block; margin: auto;" />
 
 ``` r
 pd
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-22-1.png" style="display: block; margin: auto;" />
 
 ``` r
 picollapse
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-20-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-23-1.png" style="display: block; margin: auto;" />
 
 ``` r
 pi
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-21-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-24-1.png" style="display: block; margin: auto;" />
 
 ### Relative Resilience
 
-``` r
-# Variable
-resp_var <- 'rrs'
-
-vars <- c('disturb_year','site')
-
-# AOV
-aov_rrs <- aovas(evires, vars=vars, resp_var = resp_var)
-
-mc <- aov_rrs$model_coeff
-
-pander(mc, round=5,
-       caption = paste0("ANOVA table: ", resp_var), missing = '', 
-       emphasize.strong.cells = 
-         which(mc < 0.1 & mc == mc$p.value, arr.ind = T))
-```
-
-<table style="width:93%;">
+<table style="width:85%;">
 <caption>ANOVA table: rrs</caption>
 <colgroup>
-<col width="27%" />
-<col width="9%" />
+<col width="25%" />
+<col width="6%" />
+<col width="11%" />
 <col width="12%" />
-<col width="13%" />
 <col width="16%" />
 <col width="12%" />
 </colgroup>
@@ -987,15 +781,6 @@ pander(mc, round=5,
 </tr>
 </tbody>
 </table>
-
-``` r
-gm <- aov_rrs$model_summary
-
-gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
-colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
-rownames(gm) <- "Statistic"
-pander(t(gm)) 
-```
 
 <table style="width:49%;">
 <colgroup>
@@ -1147,156 +932,59 @@ postH_rrs <- phc(mymodel = mymodel, resp_var = resp_var)
     ## P value adjustment: bonferroni method for 6 tests
 
 ``` r
-#### ~ Site
-ps <- plot(effect("site",mymodel))
-#### ~ Disturb Year
-pd <- plot(effect('disturb_year', mymodel))
-#### Disturb Year:Site
-picollapse <- plot(effect("disturb_year:site",mymodel), multiline = TRUE, ci.style = 'bars')
-pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
-```
-
-``` r
 ps
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-24-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-28-1.png" style="display: block; margin: auto;" />
 
 ``` r
 pd
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-25-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-29-1.png" style="display: block; margin: auto;" />
 
 ``` r
 picollapse
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-26-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-30-1.png" style="display: block; margin: auto;" />
 
 ``` r
 pi
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-27-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-31-1.png" style="display: block; margin: auto;" />
+
+### mean + sd
 
 ``` r
-means_site <- postH_rc[[4]] %>% mutate(var = 'rc') %>% 
-  bind_rows(postH_rt[[4]] %>% mutate(var = 'rt')) %>% 
-  bind_rows(postH_rs[[4]] %>% mutate(var = 'rs')) %>% 
-  bind_rows(postH_rrs[[4]] %>% mutate(var = 'rrs')) %>% 
-  rename(letras = .group)
-
-means_disturb <- postH_rc[[5]] %>% mutate(var = 'rc') %>% 
-  bind_rows(postH_rt[[5]] %>% mutate(var = 'rt')) %>% 
-  bind_rows(postH_rs[[5]] %>% mutate(var = 'rs')) %>% 
-  bind_rows(postH_rrs[[5]] %>% mutate(var = 'rrs')) %>% 
-  rename(letras = .group)
-
-means_distub_site <- postH_rc[[6]] %>% mutate(var = 'rc') %>% 
-  bind_rows(postH_rt[[6]] %>% mutate(var = 'rt')) %>% 
-  bind_rows(postH_rs[[6]] %>% mutate(var = 'rs')) %>% 
-  bind_rows(postH_rrs[[6]] %>% mutate(var = 'rrs')) %>% 
-  rename(letras = .group)
-```
-
-``` r
-dodge <- position_dodge(width = 0.3)
-micolor <- '#455883'
-mierrorbarSE <- aes(ymin=lsmean - SE, ymax=lsmean + SE)
-mierrorbar <- aes(ymin=lower.CL, ymax=upper.CL)
-```
-
-``` r
-plot_ms <- means_site %>%  
-  ggplot(aes(x=site, y=lsmean)) + 
-  geom_point(colour=micolor, 
-             size=3, position = dodge) +
-  theme_bw() + xlab('') + ylab('') + 
-  facet_wrap(~var, scales='free_y', ncol = 1) +
-  geom_text(aes(y=lsmean, label=letras), nudge_x = 0.15) +
-  theme(strip.background = element_rect(colour = "black", fill = "white"))
-
-plot_msSE <- plot_ms + geom_errorbar(mierrorbarSE,color=micolor, 
-                                     size=.5, width=.15, position = dodge) 
-
-plot_msCI <- plot_ms + geom_errorbar(mierrorbar,color=micolor, 
-                                     size=.5, width=.15, position = dodge)
-```
-
-``` r
-plot_md <- means_disturb %>%  
-  ggplot(aes(x=disturb_year, y=lsmean)) + 
-  geom_point(colour=micolor, 
-             size=3, position = dodge) +
-  theme_bw() + xlab('') + ylab('') + 
-  facet_wrap(~var, scales='free_y', ncol = 1) +
-  geom_text(aes(y=lsmean, label=letras), nudge_x = 0.15) +
-  theme(strip.background = element_rect(colour = "black", fill = "white"))
-
-
-plot_mdSE <- plot_md + geom_errorbar(mierrorbarSE,color=micolor, 
-                                     size=.5, width=.15, position = dodge) 
-
-plot_mdCI <- plot_md + geom_errorbar(mierrorbar,color=micolor, 
-                                     size=.5, width=.15, position = dodge)
-```
-
-``` r
-plot_mds <- means_distub_site %>%  
-  ggplot(aes(x=site, y=lsmean, group=disturb_year, colour=disturb_year)) + 
-  geom_point(aes(shape=disturb_year), size=3) + 
-  geom_line() +
-  theme_bw() + xlab('') + ylab('') + 
-  facet_wrap(~var, scales='free_y', ncol = 1) +
-  geom_text(aes(y=lsmean+SE, label=letras), nudge_x = 0.15)+
-  theme(strip.background = element_rect(colour = "black", fill = "white"),
-        legend.position = c(0.8, 0.93),
-        legend.background = element_blank()) +
-  scale_colour_manual(values = c(micolor, "red")) 
-
-
-plot_mdsSE <- plot_mds + geom_errorbar(mierrorbarSE, size=.5, width=.15)
-plot_mdsCI <- plot_mds + geom_errorbar(mierrorbar, size=.5, width=.15)
-```
-
-``` r
-pdf(paste0(di, '/images/resilience/interaction_plotsSE.pdf'), width=9, height = 9)
 grid.arrange(plot_mdSE, plot_msSE, plot_mdsSE, ncol=3)
-dev.off()
 ```
 
-    ## quartz_off_screen 
-    ##                 2
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-37-1.png" style="display: block; margin: auto;" />
+
+### mean + ci
 
 ``` r
-pdf(paste0(di, '/images/resilience/interaction_plotsCI.pdf'), width=9, height = 9)
 grid.arrange(plot_mdCI, plot_msCI, plot_mdsCI, ncol=3)
-dev.off()
 ```
+
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-38-1.png" style="display: block; margin: auto;" />
 
     ## quartz_off_screen 
     ##                 2
 
-``` r
-aovas_coeff <- aov_rc$model_coeff %>% mutate(var = 'rc') %>% 
-  bind_rows(aov_rt$model_coeff %>% mutate(var = 'rt')) %>% 
-  bind_rows(aov_rs$model_coeff %>% mutate(var = 'rs')) %>% 
-  bind_rows(aov_rrs$model_coeff%>% mutate(var = 'rrs')) 
+    ## quartz_off_screen 
+    ##                 2
 
-write.csv(aovas_coeff, file=paste0(di, '/out/anovas_resilience/anovas_statistics.csv'), row.names = F)
-
-aovas_coeff %>% pander()
-```
-
-<table>
+<table style="width:94%;">
 <colgroup>
 <col width="25%" />
-<col width="8%" />
+<col width="6%" />
+<col width="11%" />
 <col width="12%" />
-<col width="14%" />
-<col width="15%" />
 <col width="16%" />
+<col width="15%" />
 <col width="6%" />
 </colgroup>
 <thead>
@@ -1458,30 +1146,13 @@ aovas_coeff %>% pander()
 </tbody>
 </table>
 
-``` r
-aovas_model_summary <- aov_rc$model_summary %>% mutate(var = 'rc') %>% 
-  bind_rows(aov_rt$model_summary %>% mutate(var = 'rt')) %>% 
-  bind_rows(aov_rs$model_summary %>% mutate(var = 'rs')) %>% 
-  bind_rows(aov_rrs$model_summary%>% mutate(var = 'rrs')) 
-
-write.csv(aovas_model_summary, 
-          file=paste0(di, '/out/anovas_resilience/anovas_summary_modelos.csv'), row.names = F)
-
-
-gm <- apply(aovas_model_summary, 1, formatC, digits = 2, format = "f") 
-rownames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e", "variable"),"$")
-colnames(gm) <- c("rc", "rt", "rs", "rrs")
-
-pander(gm)
-```
-
 <table>
-<caption>Table continues below</caption>
 <colgroup>
-<col width="33%" />
-<col width="22%" />
-<col width="22%" />
-<col width="22%" />
+<col width="30%" />
+<col width="17%" />
+<col width="17%" />
+<col width="16%" />
+<col width="16%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -1489,6 +1160,7 @@ pander(gm)
 <th align="center">rc</th>
 <th align="center">rt</th>
 <th align="center">rs</th>
+<th align="center">rrs</th>
 </tr>
 </thead>
 <tbody>
@@ -1497,33 +1169,39 @@ pander(gm)
 <td align="center">0.3511444</td>
 <td align="center">0.4694715</td>
 <td align="center">0.1366188</td>
+<td align="center">0.3110905</td>
 </tr>
 <tr class="even">
 <td align="center"><strong><span class="math inline"><em>a</em><em>d</em><em>j</em><em>R</em><sup>2</sup></span></strong></td>
 <td align="center">0.3500749</td>
 <td align="center">0.4685970</td>
 <td align="center">0.1351956</td>
+<td align="center">0.3099549</td>
 </tr>
 <tr class="odd">
 <td align="center"><strong><span class="math inline"><em>σ</em><sub><em>e</em></sub></span></strong></td>
 <td align="center">0.06813799</td>
 <td align="center">0.05502703</td>
 <td align="center">0.04951326</td>
+<td align="center">0.05637145</td>
 </tr>
 <tr class="even">
 <td align="center"><strong><span class="math inline"><em>F</em></span></strong></td>
 <td align="center">328.31282</td>
 <td align="center">536.84720</td>
 <td align="center">95.99708</td>
+<td align="center">273.95212</td>
 </tr>
 <tr class="odd">
 <td align="center"><strong><span class="math inline"><em>p</em></span></strong></td>
 <td align="center">2.291209e-170</td>
 <td align="center">7.130860e-250</td>
 <td align="center">1.111125e-57</td>
+<td align="center">1.015581e-146</td>
 </tr>
 <tr class="even">
 <td align="center"><strong><span class="math inline"><em>d</em><em>f</em><sub><em>m</em></sub></span></strong></td>
+<td align="center">4</td>
 <td align="center">4</td>
 <td align="center">4</td>
 <td align="center">4</td>
@@ -1533,27 +1211,32 @@ pander(gm)
 <td align="center">2313.524</td>
 <td align="center">2703.332</td>
 <td align="center">2895.917</td>
+<td align="center">2659.304</td>
 </tr>
 <tr class="even">
 <td align="center"><strong><span class="math inline"><em>A</em><em>I</em><em>C</em></span></strong></td>
 <td align="center">-4617.048</td>
 <td align="center">-5396.664</td>
 <td align="center">-5781.835</td>
+<td align="center">-5308.608</td>
 </tr>
 <tr class="odd">
 <td align="center"><strong><span class="math inline"><em>B</em><em>I</em><em>C</em></span></strong></td>
 <td align="center">-4589.504</td>
 <td align="center">-5369.120</td>
 <td align="center">-5754.291</td>
+<td align="center">-5281.064</td>
 </tr>
 <tr class="even">
 <td align="center"><strong><span class="math inline"><em>d</em><em>e</em><em>v</em></span></strong></td>
 <td align="center">8.449871</td>
 <td align="center">5.510913</td>
 <td align="center">4.461844</td>
+<td align="center">5.783487</td>
 </tr>
 <tr class="odd">
 <td align="center"><strong><span class="math inline"><em>d</em><em>f</em><sub><em>e</em></sub></span></strong></td>
+<td align="center">1820</td>
 <td align="center">1820</td>
 <td align="center">1820</td>
 <td align="center">1820</td>
@@ -1563,68 +1246,6 @@ pander(gm)
 <td align="center">rc</td>
 <td align="center">rt</td>
 <td align="center">rs</td>
-</tr>
-</tbody>
-</table>
-
-<table style="width:54%;">
-<colgroup>
-<col width="33%" />
-<col width="20%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="center"> </th>
-<th align="center">rrs</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="center"><strong><span class="math inline"><em>R</em><sup>2</sup></span></strong></td>
-<td align="center">0.3110905</td>
-</tr>
-<tr class="even">
-<td align="center"><strong><span class="math inline"><em>a</em><em>d</em><em>j</em><em>R</em><sup>2</sup></span></strong></td>
-<td align="center">0.3099549</td>
-</tr>
-<tr class="odd">
-<td align="center"><strong><span class="math inline"><em>σ</em><sub><em>e</em></sub></span></strong></td>
-<td align="center">0.05637145</td>
-</tr>
-<tr class="even">
-<td align="center"><strong><span class="math inline"><em>F</em></span></strong></td>
-<td align="center">273.95212</td>
-</tr>
-<tr class="odd">
-<td align="center"><strong><span class="math inline"><em>p</em></span></strong></td>
-<td align="center">1.015581e-146</td>
-</tr>
-<tr class="even">
-<td align="center"><strong><span class="math inline"><em>d</em><em>f</em><sub><em>m</em></sub></span></strong></td>
-<td align="center">4</td>
-</tr>
-<tr class="odd">
-<td align="center"><strong><span class="math inline"><em>l</em><em>o</em><em>g</em><em>L</em><em>i</em><em>k</em></span></strong></td>
-<td align="center">2659.304</td>
-</tr>
-<tr class="even">
-<td align="center"><strong><span class="math inline"><em>A</em><em>I</em><em>C</em></span></strong></td>
-<td align="center">-5308.608</td>
-</tr>
-<tr class="odd">
-<td align="center"><strong><span class="math inline"><em>B</em><em>I</em><em>C</em></span></strong></td>
-<td align="center">-5281.064</td>
-</tr>
-<tr class="even">
-<td align="center"><strong><span class="math inline"><em>d</em><em>e</em><em>v</em></span></strong></td>
-<td align="center">5.783487</td>
-</tr>
-<tr class="odd">
-<td align="center"><strong><span class="math inline"><em>d</em><em>f</em><sub><em>e</em></sub></span></strong></td>
-<td align="center">1820</td>
-</tr>
-<tr class="even">
-<td align="center"><strong><span class="math inline"><em>v</em><em>a</em><em>r</em><em>i</em><em>a</em><em>b</em><em>l</em><em>e</em></span></strong></td>
 <td align="center">rrs</td>
 </tr>
 </tbody>
