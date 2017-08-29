@@ -13,8 +13,8 @@ opts_chunk$set(fig.align='center', message = FALSE, warning = FALSE)
 
 ```{r wd, echo=FALSE}
 #---------------------------------
-machine <- 'ajpelu'
-# machine <- 'ajpeluLap'
+#machine <- 'ajpelu'
+machine <- 'ajpeluLap'
 di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
 #---------------------------------
 ```
@@ -138,6 +138,150 @@ phc <- function(mymodel, resp_var){
   return(list(aux_ph_site, aux_ph_event, aux_ph_i, cld_site, cld_event, cld_i))
 }
 ```
+
+
+```{r}
+
+
+df <- evires
+resp_var <- 'rs'
+
+
+vars <- c('disturb_year','site')
+
+
+dfsel <- df %>% dplyr::select_(.dots=c(vars, resp_var)) 
+
+
+
+myformula <- as.formula(paste0(resp_var,  " ~ ",paste(vars, collapse = '*')))
+mymodel <- aov(myformula, data=dfsel)
+
+
+myformula
+
+
+#Shapiro-Wilk normality tests by Day
+cat("Normality p-values by Factor Day: ")
+for (i in unique(factor(dfsel$site))){
+  cat(shapiro.test(dfsel[dfsel$site==i, ]$rs)$p.value," ")
+}
+
+shapiro.test(dfsel[dfsel$site=='2005', ]$rs)
+
+head(dfsel) 
+
+dfsel %>% filter(site == 'Northern slope') %>% shapiro.test('rs')
+
+
+
+
+bartlett.test(rs ~ disturb_year, data = dfsel)
+bartlett.test(rs ~ site, data = dfsel)
+
+
+factores <- c('disturb_year', 'site')
+resp_var <- 'rs'
+
+shapirosNormal <- function(df, resp_var, factor_vars) { 
+  out <- df %>% 
+    group_by_(.dots=factor_vars) %>% 
+    summarise(statistic = round(shapiro.test(!!resp_var)$statistic,5),
+              p_value = round(shapiro.test(!!resp_var)$p.value,5),
+              lev = r)
+
+  out2 <- 
+  
+  return(out)
+  
+  
+  }
+
+
+xx <-leveneTest(rs ~ site:disturb_year, data = dfsel, center=mean)
+
+fligner.test(rs ~ site, data = dfsel)
+
+https://rexplorations.wordpress.com/2015/09/07/two-way-anova-in-r/
+http://dzchilds.github.io/aps-data-analysis-L2/
+  http://www.flutterbys.com.au/stats/tut/tut7.6b.html
+http://www.flutterbys.com.au/stats/tut/tut7.6a.html#h3_28
+https://www.biogeosciences.net/12/4235/2015/bg-12-4235-2015.pdf
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3905046/
+  https://www.researchgate.net/publication/318983016_Transpiration_and_water_potential_of_young_Quercus_petraea_M_Liebl_coppice_sprouts_and_seedlings_during_favourable_and_drought_conditions
+https://canal.ugr.es/noticia/oro-esferico-tratamiento-cancer-mama/
+  http://www.statmethods.net/stats/anova.html
+http://www.sthda.com/english/wiki/two-way-anova-test-in-r
+http://sci-hub.io/10.1111/j.1600-0706.2011.19372.x
+http://rpkg.gepuro.net/
+  
+shapirosNormal(dfsel, resp_var = quo(rs), factores)
+
+
+
+out <- dfsel %>% group_by_(.dots=factores) %>% 
+  summarise(statistic = shapiro.test(rs)$statistic,
+            p.value = round(shapiro.test(rs)$p.value,5))
+
+normal <- dfsel %>%
+  group_by(disturb_year, site) %>%
+  summarise(statistic = shapiro.test(rs)$statistic,
+            p.value = round(shapiro.test(rs)$p.value,5))
+
+normal <- dfsel %>%
+  mutate(log_rs = sqrt(rs)) %>% 
+  group_by(disturb_year, site) %>%
+  summarise(statistic = shapiro.test(log_rs)$statistic,
+            p.value = round(shapiro.test(log_rs)$p.value,5))
+
+
+
+
+
+
+dfsel <- dfsel %>% mutate(
+  root_rs = sqrt(rs),
+  log_rs2 = log(rs)
+) 
+  
+resp_var <- 'root_rs'
+resp_var <- 'rs'
+myformula <- as.formula(paste0(resp_var,  " ~ ",paste(vars, collapse = '*')))
+
+aov()
+
+glm(myformula, data=df)
+
+head(dfsel)
+
+
+
+leveneTest(myformula, data=dfsel)
+plot(mymodel, 2)
+?bartlett.test
+
+
+fligner.test(root_rs ~ disturb_year*site, data=dfsel)
+
+myformula
+
+
+boxplot(root_rs ~ disturb_year, data=dfsel)
+
+
+
+replications(root_rs ~ disturb_year*site, data=dfsel)
+
+
+# Extract the residuals
+aov_residuals <- residuals(object = mymodel)
+# Run Shapiro-Wilk test
+shapiro.test(x = aov_residuals)
+
+
+```
+
+
 
 ## ANOVAs
 ### Recovery
