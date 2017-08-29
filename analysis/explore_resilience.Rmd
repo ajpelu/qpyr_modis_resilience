@@ -2,25 +2,23 @@
 title: "Explore resilience evi"
 author: "AJ Perez-Luque (@ajpelu)"
 date: "2017 Aug"
-output:  
-  md_document:
-    variant: markdown_github
+output: pdf_document
 ---
 ```{r, echo=FALSE, message=FALSE}
 require(knitr)
-opts_chunk$set(fig.align='center', fig.width = 14, message = FALSE, warning = FALSE) 
+opts_chunk$set(fig.align='center', message = FALSE, warning = FALSE) 
 ```
 
 ```{r wd, echo=FALSE}
 #---------------------------------
-#machine <- 'ajpelu'
-machine <- 'ajpeluLap'
+machine <- 'ajpelu'
+# machine <- 'ajpeluLap'
 di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
 #---------------------------------
 ```
 
 
-```{r packages, warning=FALSE, message=FALSE}
+```{r packages, warning=FALSE, message=FALSE, echo=FALSE}
 library('dplyr')
 library('tidyverse')
 library('broom')
@@ -66,7 +64,7 @@ evires <- evires %>% rename(site = clu_pop2) %>%
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 # Custom Function to compute ANOVAS
 aovas <- function(df, vars, resp_var){ 
   require('dplyr')
@@ -142,7 +140,7 @@ phc <- function(mymodel, resp_var){
 ## ANOVAs
 ### Recovery
 
-```{r}
+```{r, echo=FALSE}
 resp_var <- 'rc'
 vars <- c('disturb_year','site')
 
@@ -162,14 +160,16 @@ gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
 colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
 rownames(gm) <- "Statistic"
 pander(t(gm)) 
+```
 
-
+```{r}
 # Post hoc Define model
 mymodel <- aov_rc$mymodel
 postH_rc <- phc(mymodel = mymodel, resp_var = resp_var)
 ```
 
-```{r}
+
+```{r, echo=FALSE}
 #### ~ Site
 ps <- plot(effect("site",mymodel))
 #### ~ Disturb Year
@@ -180,25 +180,25 @@ pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
 
 ``` 
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 ps
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 pd
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 picollapse
 ```
 
-```{r}
+```{r, fig.width = 6}
 pi
 ```
 
 
 ### Resistance 
-```{r}
+```{r, echo=FALSE}
 # Variable
 resp_var <- 'rt'
 
@@ -220,14 +220,15 @@ gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
 colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
 rownames(gm) <- "Statistic"
 pander(t(gm)) 
+```
 
-
+```{r}
 # Post hoc Define model
 mymodel <- aov_rt$mymodel
 postH_rt <- phc(mymodel = mymodel, resp_var = resp_var)
 ```
 
-```{r}
+```{r, echo=FALSE}
 #### ~ Site
 ps <- plot(effect("site",mymodel))
 #### ~ Disturb Year
@@ -238,24 +239,24 @@ pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
 
 ``` 
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 ps
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 pd
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 picollapse
 ```
 
-```{r}
+```{r, fig.width = 6}
 pi
 ```
 
 ### Resilience 
-```{r}
+```{r, echo=FALSE}
 # Variable
 resp_var <- 'rs'
 
@@ -277,14 +278,15 @@ gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
 colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
 rownames(gm) <- "Statistic"
 pander(t(gm)) 
+```
 
-
+```{r}
 # Post hoc Define model
 mymodel <- aov_rs$mymodel
 postH_rs <- phc(mymodel = mymodel, resp_var = resp_var)
 ```
 
-```{r}
+```{r, echo=FALSE}
 #### ~ Site
 ps <- plot(effect("site",mymodel))
 #### ~ Disturb Year
@@ -295,25 +297,25 @@ pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
 
 ``` 
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 ps
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 pd
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 picollapse
 ```
 
-```{r}
+```{r, fig.width = 6}
 pi
 ```
 
 
 ### Relative Resilience
-```{r}
+```{r, echo=FALSE}
 # Variable
 resp_var <- 'rrs'
 
@@ -335,14 +337,15 @@ gm <- apply(gm, 1, formatC, digits = 2, format = "f") %>% t()
 colnames(gm) <- paste0("$",c("R^2","\\mathrm{adj}R^2","\\sigma_e","F","p","df_m","\\mathrm{logLik}","AIC","BIC","\\mathrm{dev}","df_e"),"$")
 rownames(gm) <- "Statistic"
 pander(t(gm)) 
+```
 
-
+```{r}
 # Post hoc Define model
 mymodel <- aov_rrs$mymodel
 postH_rrs <- phc(mymodel = mymodel, resp_var = resp_var)
 ```
 
-```{r}
+```{r, echo=FALSE}
 #### ~ Site
 ps <- plot(effect("site",mymodel))
 #### ~ Disturb Year
@@ -353,24 +356,24 @@ pi <- plot(effect("disturb_year:site",mymodel), layout=c(2,1))
 
 ``` 
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 ps
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 pd
 ```
 
-```{r}
+```{r, fig.width = 4, fig.height=4}
 picollapse
 ```
 
-```{r}
+```{r, fig.width = 6}
 pi
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 means_site <- postH_rc[[4]] %>% mutate(var = 'rc') %>% 
   bind_rows(postH_rt[[4]] %>% mutate(var = 'rt')) %>% 
   bind_rows(postH_rs[[4]] %>% mutate(var = 'rs')) %>% 
@@ -391,14 +394,14 @@ means_distub_site <- postH_rc[[6]] %>% mutate(var = 'rc') %>%
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 dodge <- position_dodge(width = 0.3)
 micolor <- '#455883'
 mierrorbarSE <- aes(ymin=lsmean - SE, ymax=lsmean + SE)
 mierrorbar <- aes(ymin=lower.CL, ymax=upper.CL)
 ```
 
-```{r}
+```{r, echo=FALSE}
 plot_ms <- means_site %>%  
   ggplot(aes(x=site, y=lsmean)) + 
   geom_point(colour=micolor, 
@@ -416,7 +419,7 @@ plot_msCI <- plot_ms + geom_errorbar(mierrorbar,color=micolor,
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 plot_md <- means_disturb %>%  
   ggplot(aes(x=disturb_year, y=lsmean)) + 
   geom_point(colour=micolor, 
@@ -434,7 +437,7 @@ plot_mdCI <- plot_md + geom_errorbar(mierrorbar,color=micolor,
                                      size=.5, width=.15, position = dodge)
 ```
 
-```{r}
+```{r, echo=FALSE}
 plot_mds <- means_distub_site %>%  
   ggplot(aes(x=site, y=lsmean, group=disturb_year, colour=disturb_year)) + 
   geom_point(aes(shape=disturb_year), size=3) + 
@@ -452,8 +455,20 @@ plot_mdsSE <- plot_mds + geom_errorbar(mierrorbarSE, size=.5, width=.15)
 plot_mdsCI <- plot_mds + geom_errorbar(mierrorbar, size=.5, width=.15)
 ```
 
+### mean + sd
+```{r,fig.width = 12, fig.height=12}
+grid.arrange(plot_mdSE, plot_msSE, plot_mdsSE, ncol=3)
+```
 
-```{r}
+
+
+### mean + ci
+
+```{r, fig.width = 12, fig.height=12}
+grid.arrange(plot_mdCI, plot_msCI, plot_mdsCI, ncol=3)
+```
+
+```{r, echo=FALSE}
 pdf(paste0(di, '/images/resilience/interaction_plotsSE.pdf'), width=9, height = 9)
 grid.arrange(plot_mdSE, plot_msSE, plot_mdsSE, ncol=3)
 dev.off()
@@ -464,7 +479,7 @@ dev.off()
 
 ```
 
-```{r}
+```{r, echo=FALSE}
 aovas_coeff <- aov_rc$model_coeff %>% mutate(var = 'rc') %>% 
   bind_rows(aov_rt$model_coeff %>% mutate(var = 'rt')) %>% 
   bind_rows(aov_rs$model_coeff %>% mutate(var = 'rs')) %>% 
@@ -475,7 +490,7 @@ write.csv(aovas_coeff, file=paste0(di, '/out/anovas_resilience/anovas_statistics
 aovas_coeff %>% pander()
 ```
 
-```{r}
+```{r, echo=FALSE}
 aovas_model_summary <- aov_rc$model_summary %>% mutate(var = 'rc') %>% 
   bind_rows(aov_rt$model_summary %>% mutate(var = 'rt')) %>% 
   bind_rows(aov_rs$model_summary %>% mutate(var = 'rs')) %>% 
