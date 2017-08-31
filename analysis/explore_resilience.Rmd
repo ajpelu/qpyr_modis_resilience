@@ -28,6 +28,7 @@ library('pander')
 library('lsmeans')
 library('effects')
 library('gridExtra')
+library('WRS2')
 ```
 
 # Prepare data 
@@ -140,22 +141,52 @@ phc <- function(mymodel, resp_var){
 ```
 
 
+# box cox 
+```{r}
+m <- lm(rc ~ disturb_year * site, data = evires)
+
+bc <- boxcox(m)
+bc$x[which.max(bc$y)]
+
+
+```
+
+
+```{r}
+
+
+
+head(evires)
+
+evires$logres <- log10(evires$rs)
+
+
+mod_rob 
+pbad2way(rs ~ disturb_year * site, data = evires, est = "onestep")
+
+
+mcp2a(rs ~ disturb_year * site, data = evires)
+
+
+summary(mod_rob)
+
+
+```
+
+
+
+
 ```{r}
 
 
 df <- evires
-resp_var <- 'rs'
-
-
+resp_var <- 'rrs'
 vars <- c('disturb_year','site')
-
-
 dfsel <- df %>% dplyr::select_(.dots=c(vars, resp_var)) 
-
-
-
 myformula <- as.formula(paste0(resp_var,  " ~ ",paste(vars, collapse = '*')))
 mymodel <- aov(myformula, data=dfsel)
+par(mfrow=c(2,2))
+plot(mymodel)
 
 
 myformula
@@ -182,19 +213,15 @@ bartlett.test(rs ~ site, data = dfsel)
 
 factores <- c('disturb_year', 'site')
 resp_var <- 'rs'
+resp_var <- 'logres'
 
 shapirosNormal <- function(df, resp_var, factor_vars) { 
   out <- df %>% 
     group_by_(.dots=factor_vars) %>% 
     summarise(statistic = round(shapiro.test(!!resp_var)$statistic,5),
-              p_value = round(shapiro.test(!!resp_var)$p.value,5),
-              lev = r)
-
-  out2 <- 
+              p_value = round(shapiro.test(!!resp_var)$p.value,5))
   
   return(out)
-  
-  
   }
 
 
@@ -215,7 +242,10 @@ http://www.sthda.com/english/wiki/two-way-anova-test-in-r
 http://sci-hub.io/10.1111/j.1600-0706.2011.19372.x
 http://rpkg.gepuro.net/
   
-shapirosNormal(dfsel, resp_var = quo(rs), factores)
+
+  
+shapirosNormal(evires, resp_var = quo(logrs), factores)
+
 
 
 
