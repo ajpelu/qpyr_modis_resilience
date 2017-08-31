@@ -13,8 +13,8 @@ opts_chunk$set(fig.align='center', message = FALSE, warning = FALSE)
 
 ```{r wd, echo=FALSE}
 #---------------------------------
-#machine <- 'ajpelu'
-machine <- 'ajpeluLap'
+machine <- 'ajpelu'
+#machine <- 'ajpeluLap'
 di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
 #---------------------------------
 ```
@@ -29,6 +29,9 @@ library('lsmeans')
 library('effects')
 library('gridExtra')
 library('WRS2')
+library('car')
+library('MASS')
+library('rcompanion')
 ```
 
 # Prepare data 
@@ -66,6 +69,7 @@ evires <- evires %>% rename(site = clu_pop2) %>%
 
 ```
 
+# ANOVAS 
 
 ```{r, echo=FALSE}
 # Custom Function to compute ANOVAS
@@ -140,181 +144,7 @@ phc <- function(mymodel, resp_var){
 }
 ```
 
-
-# box cox 
-```{r}
-m <- lm(rc ~ disturb_year * site, data = evires)
-
-bc <- boxcox(m)
-bc$x[which.max(bc$y)]
-
-
-```
-
-
-```{r}
-
-
-
-head(evires)
-
-evires$logres <- log10(evires$rs)
-
-
-mod_rob 
-pbad2way(rs ~ disturb_year * site, data = evires, est = "onestep")
-
-
-mcp2a(rs ~ disturb_year * site, data = evires)
-
-
-summary(mod_rob)
-
-
-```
-
-
-
-
-```{r}
-
-
-df <- evires
-resp_var <- 'rrs'
-vars <- c('disturb_year','site')
-dfsel <- df %>% dplyr::select_(.dots=c(vars, resp_var)) 
-myformula <- as.formula(paste0(resp_var,  " ~ ",paste(vars, collapse = '*')))
-mymodel <- aov(myformula, data=dfsel)
-par(mfrow=c(2,2))
-plot(mymodel)
-
-
-myformula
-
-
-#Shapiro-Wilk normality tests by Day
-cat("Normality p-values by Factor Day: ")
-for (i in unique(factor(dfsel$site))){
-  cat(shapiro.test(dfsel[dfsel$site==i, ]$rs)$p.value," ")
-}
-
-shapiro.test(dfsel[dfsel$site=='2005', ]$rs)
-
-head(dfsel) 
-
-dfsel %>% filter(site == 'Northern slope') %>% shapiro.test('rs')
-
-
-
-
-bartlett.test(rs ~ disturb_year, data = dfsel)
-bartlett.test(rs ~ site, data = dfsel)
-
-
-factores <- c('disturb_year', 'site')
-resp_var <- 'rs'
-resp_var <- 'logres'
-
-shapirosNormal <- function(df, resp_var, factor_vars) { 
-  out <- df %>% 
-    group_by_(.dots=factor_vars) %>% 
-    summarise(statistic = round(shapiro.test(!!resp_var)$statistic,5),
-              p_value = round(shapiro.test(!!resp_var)$p.value,5))
-  
-  return(out)
-  }
-
-
-xx <-leveneTest(rs ~ site:disturb_year, data = dfsel, center=mean)
-
-fligner.test(rs ~ site, data = dfsel)
-
-https://rexplorations.wordpress.com/2015/09/07/two-way-anova-in-r/
-http://dzchilds.github.io/aps-data-analysis-L2/
-  http://www.flutterbys.com.au/stats/tut/tut7.6b.html
-http://www.flutterbys.com.au/stats/tut/tut7.6a.html#h3_28
-https://www.biogeosciences.net/12/4235/2015/bg-12-4235-2015.pdf
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3905046/
-  https://www.researchgate.net/publication/318983016_Transpiration_and_water_potential_of_young_Quercus_petraea_M_Liebl_coppice_sprouts_and_seedlings_during_favourable_and_drought_conditions
-https://canal.ugr.es/noticia/oro-esferico-tratamiento-cancer-mama/
-  http://www.statmethods.net/stats/anova.html
-http://www.sthda.com/english/wiki/two-way-anova-test-in-r
-http://sci-hub.io/10.1111/j.1600-0706.2011.19372.x
-http://rpkg.gepuro.net/
-  
-
-  
-shapirosNormal(evires, resp_var = quo(logrs), factores)
-
-
-
-
-out <- dfsel %>% group_by_(.dots=factores) %>% 
-  summarise(statistic = shapiro.test(rs)$statistic,
-            p.value = round(shapiro.test(rs)$p.value,5))
-
-normal <- dfsel %>%
-  group_by(disturb_year, site) %>%
-  summarise(statistic = shapiro.test(rs)$statistic,
-            p.value = round(shapiro.test(rs)$p.value,5))
-
-normal <- dfsel %>%
-  mutate(log_rs = sqrt(rs)) %>% 
-  group_by(disturb_year, site) %>%
-  summarise(statistic = shapiro.test(log_rs)$statistic,
-            p.value = round(shapiro.test(log_rs)$p.value,5))
-
-
-
-
-
-
-dfsel <- dfsel %>% mutate(
-  root_rs = sqrt(rs),
-  log_rs2 = log(rs)
-) 
-  
-resp_var <- 'root_rs'
-resp_var <- 'rs'
-myformula <- as.formula(paste0(resp_var,  " ~ ",paste(vars, collapse = '*')))
-
-aov()
-
-glm(myformula, data=df)
-
-head(dfsel)
-
-
-
-leveneTest(myformula, data=dfsel)
-plot(mymodel, 2)
-?bartlett.test
-
-
-fligner.test(root_rs ~ disturb_year*site, data=dfsel)
-
-myformula
-
-
-boxplot(root_rs ~ disturb_year, data=dfsel)
-
-
-
-replications(root_rs ~ disturb_year*site, data=dfsel)
-
-
-# Extract the residuals
-aov_residuals <- residuals(object = mymodel)
-# Run Shapiro-Wilk test
-shapiro.test(x = aov_residuals)
-
-
-```
-
-
-
-## ANOVAs
-### Recovery
+## Recovery
 
 ```{r, echo=FALSE}
 resp_var <- 'rc'
@@ -373,7 +203,7 @@ pi
 ```
 
 
-### Resistance 
+## Resistance 
 ```{r, echo=FALSE}
 # Variable
 resp_var <- 'rt'
@@ -431,7 +261,7 @@ picollapse
 pi
 ```
 
-### Resilience 
+## Resilience 
 ```{r, echo=FALSE}
 # Variable
 resp_var <- 'rs'
@@ -490,7 +320,7 @@ pi
 ```
 
 
-### Relative Resilience
+## Relative Resilience
 ```{r, echo=FALSE}
 # Variable
 resp_var <- 'rrs'
@@ -682,5 +512,351 @@ colnames(gm) <- c("rc", "rt", "rs", "rrs")
 
 pander(gm)
 ```
+
+# Asumptions 
+
+* Explorar si se cumplen los supuestos de normalidad y homocedasticidad. Tenemos que comprobar que cada uno de los grupos son normales (2005 vs 2012; N vs S; e interactions)
+
+```{r}
+shapirosNormal <- function(df, resp_var, factor_vars) { 
+  out <- df %>% 
+    group_by_(.dots=factor_vars) %>% 
+    summarise(statistic = round(shapiro.test(!!resp_var)$statistic,5),
+              p_value = round(shapiro.test(!!resp_var)$p.value,5)) %>% data.frame()
+  return(out)
+}
+```
+
+## Normalidad 
+
+```{r}
+### Resilience 
+nrsA <- shapirosNormal(evires, resp_var = quo(rs), 'disturb_year')
+nrsA$var <- 'rs'
+nrsB <- shapirosNormal(evires, resp_var = quo(rs), 'site') 
+nrsB$var <- 'rs'
+nrsAB <- shapirosNormal(evires, resp_var = quo(rs), c('disturb_year','site'))
+nrsAB$var <- 'rs'
+
+### Recovery
+nrcA <- shapirosNormal(evires, resp_var = quo(rc), 'disturb_year')
+nrcA$var <- 'rc'
+nrcB <- shapirosNormal(evires, resp_var = quo(rc), 'site') 
+nrcB$var <- 'rc'
+nrcAB <- shapirosNormal(evires, resp_var = quo(rc), c('disturb_year','site'))
+nrcAB$var <- 'rc'
+
+### Resistance
+nrtA <- shapirosNormal(evires, resp_var = quo(rt), 'disturb_year')
+nrtA$var <- 'rt'
+nrtB <- shapirosNormal(evires, resp_var = quo(rt), 'site') 
+nrtB$var <- 'rt'
+nrtAB <- shapirosNormal(evires, resp_var = quo(rt), c('disturb_year','site'))
+nrtAB$var <- 'rt'
+
+
+### Relative Resilience 
+nrrsA <- shapirosNormal(evires, resp_var = quo(rrs), 'disturb_year')
+nrrsA$var <- 'rrs'
+nrrsB <- shapirosNormal(evires, resp_var = quo(rrs), 'site') 
+nrrsB$var <- 'rrs'
+nrrsAB <- shapirosNormal(evires, resp_var = quo(rrs), c('disturb_year','site'))
+nrrsAB$var <- 'rrs'
+```
+
+```{r}
+normtestA <- nrcA %>% bind_rows(nrtA, nrsA, nrrsA) %>% pander()
+write.csv(normtestA, 
+          file=paste0(di, '/out/anovas_resilience/normo_disturb_year.csv'), row.names = F)
+```
+
+```{r}
+normtestB <- nrcB %>% bind_rows(nrtB, nrsB, nrrsB) %>% pander()
+write.csv(normtestB, 
+          file=paste0(di, '/out/anovas_resilience/normo_site.csv'), row.names = F)
+```
+
+```{r}
+normtestAB <- nrcAB %>% bind_rows(nrtAB, nrsAB, nrrsAB) %>% pander()
+write.csv(normtestAB, 
+          file=paste0(di, '/out/anovas_resilience/normo_disturb_year_site.csv'), row.names = F)
+```
+
+```{r}
+# rm(nrcA, nrcB, nrcAB, 
+#    nrsA, nrsB, nrsAB,
+#    nrrsA, nrrsB, nrrsAB,
+#    nrtA, nrtB, nrtAB)
+```
+
+* No se cumplen los requisitos de normalidad 
+
+
+## Heterocedasticidad 
+
+```{r}
+homogetest <- function(resp_var, factores, df){ 
+  require(car)
+
+  out_factores <- c() 
+  
+  for (f in factores){
+    hv <- c() 
+    myformula <- as.formula(paste0(resp_var, "~", f))
+    #tests 
+    fk <- fligner.test(myformula, data = df)
+    lv <- leveneTest(myformula, data = df) 
+    # out 
+    hv$fk_stat <- round(fk$statistic,3)
+    hv$fk_pvalue <- round(fk$p.value,7)
+    hv$lev_stat <- round(lv$`F value`[1],3)
+    hv$lev_pvalue <- round(lv$`Pr(>F)`[1],7)
+    hv$factor <- f
+    hv <- as.data.frame(hv) 
+    row.names(hv) <- NULL
+    
+    out_factores <- rbind(out_factores, hv)}
+  return(out_factores)
+  
+}
+```
+
+```{r}
+factores <- c('disturb_year', 'site', 'interaction(disturb_year, site)') 
+responses <- c('rs', 'rc', 'rt', 'rrs')
+homo <- c() 
+
+
+for (i in responses){ 
+  ht <- homogetest(resp_var = i, factores = factores, df = evires)
+  ht <- ht %>% mutate(response = i)
+  homo <- rbind(homo, ht)
+}
+
+homo %>% pander()
+write.csv(homo, 
+          file=paste0(di, '/out/anovas_resilience/homocedasticidad.csv'), row.names = F)
+```
+
+* Tampoco se cumplen los requisitos de homogeneidad de varianzas entre grupos
+
+# Transformación datos 
+
+## Log 
+
+* Probamos a transformar los datos con log y reanalizar los supuestos de homocedasticidad 
+
+```{r}
+factores <- c('disturb_year', 'site', 'interaction(disturb_year, site)') 
+responses <- c('logrs', 'logrc', 'logrt', 'logrrs')
+homo_log <- c() 
+
+evires <- evires %>% 
+  mutate(
+    logrs = log(rs),
+    logrc = log(rc),
+    logrt = log(rc),
+    logrrs = log(rrs)
+)
+
+for (i in responses){ 
+  ht <- homogetest(resp_var = i, factores = factores, df = evires)
+  ht <- ht %>% mutate(response = i)
+  homo_log <- rbind(homo_log, ht)
+}
+
+homo_log %>% pander()
+write.csv(homo_log, 
+          file=paste0(di, '/out/anovas_resilience/homocedasticidad_log.csv'), row.names = F)
+```
+
+* Tampoco se cumplen 
+
+## Log + 1 
+
+```{r}
+factores <- c('disturb_year', 'site', 'interaction(disturb_year, site)') 
+responses <- c('log1rs', 'log1rc', 'log1rt', 'log1rrs')
+homo_log1 <- c() 
+
+evires <- evires %>% 
+  mutate(
+    log1rs = log(rs + 1),
+    log1rc = log(rc + 1),
+    log1rt = log(rc + 1),
+    log1rrs = log(rrs +1 )
+)
+
+for (i in responses){ 
+  ht <- homogetest(resp_var = i, factores = factores, df = evires)
+  ht <- ht %>% mutate(response = i)
+  homo_log1 <- rbind(homo_log1, ht)
+}
+
+homo_log1 %>% pander()
+write.csv(homo_log, 
+          file=paste0(di, '/out/anovas_resilience/homocedasticidad_log_plus_1.csv'), row.names = F)
+```
+
+* Tampoco se cumplen 
+
+## Buscar mejor transformación de Box-Cox 
+
+* Buscamos el mejor lambda para cada variable para estudiar posibles transformaciones
+
+#### Lambda Resilience 
+```{r}
+m  <- lm(rs ~ disturb_year*site, evires)
+b <- boxcox(m)
+b$x[which.max(b$y)]
+```
+
+#### Lambda Resistance
+```{r}
+m  <- lm(rt ~ disturb_year*site, evires)
+b <- boxcox(m)
+b$x[which.max(b$y)]
+```
+
+#### Lambda Recovery
+```{r}
+m  <- lm(rc ~ disturb_year*site, evires)
+b <- boxcox(m)
+b$x[which.max(b$y)]
+```
+
+#### Lambda Relative Resilience
+```{r}
+m  <- lm(rrs ~ disturb_year*site, evires)
+b <- boxcox(m)
+b$x[which.max(b$y)]
+```
+
+Obtengo diferentes lambdas, lo cual complica las transformaciones. Por lo que opto por ROBUST ANOVA 
+
+# ROBUST ANOVA 
+
+* Ver Wilcox (2005, 2012)
+* Vamos a realizar un Robust factorial ANOVA. En concreto: 
+  
+  * Two-way robust factorial ANOVA on M-estimator
+  * pkg WRS2
+  
+## Recovery
+
+
+```{r}
+robustANOVA <- function(df, resp_var, factores, 
+         alpha, nboot, treshold) {
+  # alpha: alpha ci for huber m-estimation 
+  # nboot: numer of iterations 
+  # treshoold for letter (posthoc)
+  # See http://rcompanion.org/rcompanion/d_08a.html 
+  
+  
+  # Create interaction 
+  df$interaction <- interaction(df$disturb_year, df$site)
+  
+  # Formulas 
+  formulaFull <- as.formula(paste0(resp_var,  " ~ ",
+                                 paste(factores, collapse = '+')))
+  
+  formula_A <- as.formula(paste0(resp_var,  " ~ ", factores[1]))
+  formula_B <- as.formula(paste0(resp_var,  " ~ ", factores[2]))
+  formula_AB <- as.formula(paste0(resp_var,  " ~ interaction"))
+  
+  
+  # Produce Huber M-estimators and confidence intervals by group
+  mest <- groupwiseHuber(formulaFull, data = df, ci.type = 'wald', conf.level = alpha)
+
+  # Two-way robust analysis 
+  x <- pbad2way(formulaFull, data = df, est = "mom", nboot = nboot) 
+  
+  out_ra <- data.frame(
+    term = c(x$varnames[2], 
+             x$varnames[3], 
+             paste0(x$varnames[2], ':', x$varnames[3])),
+    p_value = c(x$A.p.value, x$B.p.value, x$AB.p.value)) 
+  
+  # post-hoc 
+  ## factor A
+  pha <- pairwiseRobustTest(formula_A, data = df, est = "mom", 
+                            nboot = nboot, method="bonferroni")
+  ## factor B
+  phb <- pairwiseRobustTest(formula_B, data = df, est = "mom", 
+                            nboot = nboot, method="bonferroni")
+  ## interaction effect (AB)
+  phab <- pairwiseRobustTest(formula_AB, data = df, est = "mom", 
+                            nboot = nboot, method="bonferroni")
+  ## letters
+  letters_ph <- rbind(
+    cldList(comparison = pha$Comparison,
+        p.value    = pha$p.adjust,
+        threshold  = treshold),
+    cldList(comparison = phb$Comparison,
+        p.value    = phb$p.adjust,
+        threshold  = treshold), 
+    cldList(comparison = phab$Comparison,
+        p.value    = phab$p.adjust,
+        threshold  = treshold))
+  
+  ph <- rbind(pha, phb, phab)
+  
+  phRWS2 <- mcp2a(formulaFull, data=df, est = "mom", nboot = nboot)
+  
+  out <- list()  
+  out$mest <- mest # Huber M-estimators and Confidence Intervals
+  out$ra <- out_ra # Output for Two-way robust analysis (M-estimators)
+  out$letters_ph <- letters_ph # Letters comparison posthoc
+  out$ph <- ph # posthoc comparison usinng pairwiseRobustTest 
+  
+  print(out_ra)
+  print(phRWS2)
+  return(out)
+}
+```
+```{r}
+factores = c('disturb_year', 'site', 'disturb_year:site')
+```
+
+
+```{r}
+rars <- robustANOVA(df=evires, resp_var='rs', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+```{r}
+rarc <- robustANOVA(df=evires, resp_var='rc', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+```{r}
+rart <- robustANOVA(df=evires, resp_var='rt', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+```{r}
+rarrs <- robustANOVA(df=evires, resp_var='rrs', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+
+
+### ahora toca los plots y guardar los datos 
+
+
+pd <- position_dodge(.2)
+ggplot(mest, aes(x=disturb_year, y=M.Huber, color = site)) + 
+  geom_point(shape=19, size=4, position=pd) +
+  geom_errorbar(aes(ymin=lower.ci,
+                      ymax=upper.ci),
+                   width=.2, size=0.7, position=pd) 
+
+
+
+
+
+
+
 
 
