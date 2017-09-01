@@ -33,10 +33,11 @@ evires <- evires %>% rename(site = clu_pop2) %>%
   mutate(disturb_year = as.factor(disturb_year))
 ```
 
-ANOVAs
-------
+ANOVAS
+======
 
-### Recovery
+Recovery
+--------
 
 <table style="width:85%;">
 <caption>ANOVA table: rc</caption>
@@ -262,7 +263,8 @@ pi
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
 
-### Resistance
+Resistance
+----------
 
 <table style="width:85%;">
 <caption>ANOVA table: rt</caption>
@@ -493,7 +495,8 @@ pi
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-17-1.png" style="display: block; margin: auto;" />
 
-### Resilience
+Resilience
+----------
 
 <table style="width:89%;">
 <caption>ANOVA table: rs</caption>
@@ -724,7 +727,8 @@ pi
 
 <img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-24-1.png" style="display: block; margin: auto;" />
 
-### Relative Resilience
+Relative Resilience
+-------------------
 
 <table style="width:85%;">
 <caption>ANOVA table: rrs</caption>
@@ -1250,3 +1254,1641 @@ grid.arrange(plot_mdCI, plot_msCI, plot_mdsCI, ncol=3)
 </tr>
 </tbody>
 </table>
+
+Asumptions
+==========
+
+-   Explorar si se cumplen los supuestos de normalidad y homocedasticidad. Tenemos que comprobar que cada uno de los grupos son normales (2005 vs 2012; N vs S; e interactions)
+
+``` r
+shapirosNormal <- function(df, resp_var, factor_vars) { 
+  out <- df %>% 
+    group_by_(.dots=factor_vars) %>% 
+    summarise(statistic = round(shapiro.test(!!resp_var)$statistic,5),
+              p_value = round(shapiro.test(!!resp_var)$p.value,5)) %>% data.frame()
+  return(out)
+}
+```
+
+Normalidad
+----------
+
+``` r
+### Resilience 
+nrsA <- shapirosNormal(evires, resp_var = quo(rs), 'disturb_year')
+nrsA$var <- 'rs'
+nrsB <- shapirosNormal(evires, resp_var = quo(rs), 'site') 
+nrsB$var <- 'rs'
+nrsAB <- shapirosNormal(evires, resp_var = quo(rs), c('disturb_year','site'))
+nrsAB$var <- 'rs'
+
+### Recovery
+nrcA <- shapirosNormal(evires, resp_var = quo(rc), 'disturb_year')
+nrcA$var <- 'rc'
+nrcB <- shapirosNormal(evires, resp_var = quo(rc), 'site') 
+nrcB$var <- 'rc'
+nrcAB <- shapirosNormal(evires, resp_var = quo(rc), c('disturb_year','site'))
+nrcAB$var <- 'rc'
+
+### Resistance
+nrtA <- shapirosNormal(evires, resp_var = quo(rt), 'disturb_year')
+nrtA$var <- 'rt'
+nrtB <- shapirosNormal(evires, resp_var = quo(rt), 'site') 
+nrtB$var <- 'rt'
+nrtAB <- shapirosNormal(evires, resp_var = quo(rt), c('disturb_year','site'))
+nrtAB$var <- 'rt'
+
+
+### Relative Resilience 
+nrrsA <- shapirosNormal(evires, resp_var = quo(rrs), 'disturb_year')
+nrrsA$var <- 'rrs'
+nrrsB <- shapirosNormal(evires, resp_var = quo(rrs), 'site') 
+nrrsB$var <- 'rrs'
+nrrsAB <- shapirosNormal(evires, resp_var = quo(rrs), c('disturb_year','site'))
+nrrsAB$var <- 'rrs'
+```
+
+``` r
+normtestA <- rbind(nrcA, nrtA, nrsA, nrrsA) 
+normtestA %>% pander()
+```
+
+<table style="width:58%;">
+<colgroup>
+<col width="20%" />
+<col width="16%" />
+<col width="13%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">disturb_year</th>
+<th align="center">statistic</th>
+<th align="center">p_value</th>
+<th align="center">var</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">0.9937</td>
+<td align="center">0.00069</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">0.9952</td>
+<td align="center">0.00573</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">0.9962</td>
+<td align="center">0.0248</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">0.9976</td>
+<td align="center">0.2164</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">0.9989</td>
+<td align="center">0.8793</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">0.9938</td>
+<td align="center">8e-04</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">0.9977</td>
+<td align="center">0.2435</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">0.9916</td>
+<td align="center">5e-05</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+write.csv(normtestA, 
+          file=paste0(di, '/out/anovas_resilience/normo_disturb_year.csv'), row.names = F)
+```
+
+``` r
+normtestB <- rbind(nrcB, nrtB, nrsB, nrrsB) 
+normtestB %>% pander()
+```
+
+<table style="width:58%;">
+<colgroup>
+<col width="20%" />
+<col width="16%" />
+<col width="13%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">site</th>
+<th align="center">statistic</th>
+<th align="center">p_value</th>
+<th align="center">var</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Northern slope</td>
+<td align="center">0.9768</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">Southern slope</td>
+<td align="center">0.9889</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">Northern slope</td>
+<td align="center">0.9909</td>
+<td align="center">1e-05</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">Southern slope</td>
+<td align="center">0.9981</td>
+<td align="center">0.4341</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">Northern slope</td>
+<td align="center">0.9901</td>
+<td align="center">1e-05</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">Southern slope</td>
+<td align="center">0.9968</td>
+<td align="center">0.0752</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">Northern slope</td>
+<td align="center">0.9942</td>
+<td align="center">0.00113</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">Southern slope</td>
+<td align="center">0.9905</td>
+<td align="center">2e-05</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+write.csv(normtestB, 
+          file=paste0(di, '/out/anovas_resilience/normo_site.csv'), row.names = F)
+```
+
+``` r
+normtestAB <- rbind(nrcAB, nrtAB, nrsAB, nrrsAB) 
+normtestAB%>% pander()
+```
+
+<table style="width:79%;">
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="16%" />
+<col width="13%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">disturb_year</th>
+<th align="center">site</th>
+<th align="center">statistic</th>
+<th align="center">p_value</th>
+<th align="center">var</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">0.9873</td>
+<td align="center">0.00041</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">0.9922</td>
+<td align="center">0.02101</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">0.9907</td>
+<td align="center">0.0045</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">0.9905</td>
+<td align="center">0.00597</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">0.9932</td>
+<td align="center">0.03304</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">0.994</td>
+<td align="center">0.07917</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">0.9959</td>
+<td align="center">0.2602</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">0.9964</td>
+<td align="center">0.4178</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">0.9949</td>
+<td align="center">0.1252</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">0.9959</td>
+<td align="center">0.3181</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">0.9832</td>
+<td align="center">3e-05</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">0.9916</td>
+<td align="center">0.01349</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">0.994</td>
+<td align="center">0.05822</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">0.9962</td>
+<td align="center">0.3659</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">0.9961</td>
+<td align="center">0.3059</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">0.9843</td>
+<td align="center">0.00011</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+write.csv(normtestAB, 
+          file=paste0(di, '/out/anovas_resilience/normo_disturb_year_site.csv'), row.names = F)
+```
+
+``` r
+# rm(nrcA, nrcB, nrcAB, 
+#    nrsA, nrsB, nrsAB,
+#    nrrsA, nrrsB, nrrsAB,
+#    nrtA, nrtB, nrtAB)
+```
+
+-   No se cumplen los requisitos de normalidad
+
+Heterocedasticidad
+------------------
+
+``` r
+homogetest <- function(resp_var, factores, df){ 
+  require(car)
+
+  out_factores <- c() 
+  
+  for (f in factores){
+    hv <- c() 
+    myformula <- as.formula(paste0(resp_var, "~", f))
+    #tests 
+    fk <- fligner.test(myformula, data = df)
+    lv <- leveneTest(myformula, data = df) 
+    # out 
+    hv$fk_stat <- round(fk$statistic,3)
+    hv$fk_pvalue <- round(fk$p.value,7)
+    hv$lev_stat <- round(lv$`F value`[1],3)
+    hv$lev_pvalue <- round(lv$`Pr(>F)`[1],7)
+    hv$factor <- f
+    hv <- as.data.frame(hv) 
+    row.names(hv) <- NULL
+    
+    out_factores <- rbind(out_factores, hv)}
+  return(out_factores)
+  
+}
+```
+
+``` r
+factores <- c('disturb_year', 'site', 'interaction(disturb_year, site)') 
+responses <- c('rs', 'rc', 'rt', 'rrs')
+homo <- c() 
+
+
+for (i in responses){ 
+  ht <- homogetest(resp_var = i, factores = factores, df = evires)
+  ht <- ht %>% mutate(response = i)
+  homo <- rbind(homo, ht)
+}
+
+homo %>% pander()
+```
+
+<table>
+<colgroup>
+<col width="12%" />
+<col width="14%" />
+<col width="13%" />
+<col width="15%" />
+<col width="31%" />
+<col width="12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">fk_stat</th>
+<th align="center">fk_pvalue</th>
+<th align="center">lev_stat</th>
+<th align="center">lev_pvalue</th>
+<th align="center">factor</th>
+<th align="center">response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2.525</td>
+<td align="center">0.1121</td>
+<td align="center">2.648</td>
+<td align="center">0.1039</td>
+<td align="center">disturb_year</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">3.839</td>
+<td align="center">0.05008</td>
+<td align="center">3.789</td>
+<td align="center">0.05174</td>
+<td align="center">site</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">17.51</td>
+<td align="center">0.0005562</td>
+<td align="center">5.914</td>
+<td align="center">0.0005166</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">211.9</td>
+<td align="center">0</td>
+<td align="center">246.3</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">141.3</td>
+<td align="center">0</td>
+<td align="center">150.6</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">190.7</td>
+<td align="center">0</td>
+<td align="center">70.07</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">63.89</td>
+<td align="center">0</td>
+<td align="center">66.3</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">125.1</td>
+<td align="center">0</td>
+<td align="center">131.9</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">12.28</td>
+<td align="center">0.006492</td>
+<td align="center">4.056</td>
+<td align="center">0.006951</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">130.1</td>
+<td align="center">0</td>
+<td align="center">146.9</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="odd">
+<td align="center">99.8</td>
+<td align="center">0</td>
+<td align="center">105.6</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">140.8</td>
+<td align="center">0</td>
+<td align="center">50.69</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+write.csv(homo, 
+          file=paste0(di, '/out/anovas_resilience/homocedasticidad.csv'), row.names = F)
+```
+
+-   Tampoco se cumplen los requisitos de homogeneidad de varianzas entre grupos
+
+Transformación datos
+====================
+
+Log
+---
+
+-   Probamos a transformar los datos con log y reanalizar los supuestos de homocedasticidad
+
+``` r
+factores <- c('disturb_year', 'site', 'interaction(disturb_year, site)') 
+responses <- c('logrs', 'logrc', 'logrt', 'logrrs')
+homo_log <- c() 
+
+evires <- evires %>% 
+  mutate(
+    logrs = log(rs),
+    logrc = log(rc),
+    logrt = log(rc),
+    logrrs = log(rrs)
+)
+
+for (i in responses){ 
+  ht <- homogetest(resp_var = i, factores = factores, df = evires)
+  ht <- ht %>% mutate(response = i)
+  homo_log <- rbind(homo_log, ht)
+}
+
+homo_log %>% pander()
+```
+
+<table>
+<colgroup>
+<col width="12%" />
+<col width="14%" />
+<col width="13%" />
+<col width="15%" />
+<col width="31%" />
+<col width="12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">fk_stat</th>
+<th align="center">fk_pvalue</th>
+<th align="center">lev_stat</th>
+<th align="center">lev_pvalue</th>
+<th align="center">factor</th>
+<th align="center">response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">0.286</td>
+<td align="center">0.5927</td>
+<td align="center">0.249</td>
+<td align="center">0.6176</td>
+<td align="center">disturb_year</td>
+<td align="center">logrs</td>
+</tr>
+<tr class="even">
+<td align="center">4.653</td>
+<td align="center">0.031</td>
+<td align="center">4.631</td>
+<td align="center">0.03153</td>
+<td align="center">site</td>
+<td align="center">logrs</td>
+</tr>
+<tr class="odd">
+<td align="center">18.81</td>
+<td align="center">0.0002987</td>
+<td align="center">6.272</td>
+<td align="center">0.0003116</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">logrs</td>
+</tr>
+<tr class="even">
+<td align="center">181.4</td>
+<td align="center">0</td>
+<td align="center">208.7</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">logrc</td>
+</tr>
+<tr class="odd">
+<td align="center">127.8</td>
+<td align="center">0</td>
+<td align="center">136.2</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">logrc</td>
+</tr>
+<tr class="even">
+<td align="center">165.2</td>
+<td align="center">0</td>
+<td align="center">60.48</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">logrc</td>
+</tr>
+<tr class="odd">
+<td align="center">181.4</td>
+<td align="center">0</td>
+<td align="center">208.7</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">logrt</td>
+</tr>
+<tr class="even">
+<td align="center">127.8</td>
+<td align="center">0</td>
+<td align="center">136.2</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">logrt</td>
+</tr>
+<tr class="odd">
+<td align="center">165.2</td>
+<td align="center">0</td>
+<td align="center">60.48</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">logrt</td>
+</tr>
+<tr class="even">
+<td align="center">2.26</td>
+<td align="center">0.1328</td>
+<td align="center">2.944</td>
+<td align="center">0.0864</td>
+<td align="center">disturb_year</td>
+<td align="center">logrrs</td>
+</tr>
+<tr class="odd">
+<td align="center">19.95</td>
+<td align="center">8e-06</td>
+<td align="center">16.68</td>
+<td align="center">4.64e-05</td>
+<td align="center">site</td>
+<td align="center">logrrs</td>
+</tr>
+<tr class="even">
+<td align="center">116.2</td>
+<td align="center">0</td>
+<td align="center">32.45</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">logrrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+write.csv(homo_log, 
+          file=paste0(di, '/out/anovas_resilience/homocedasticidad_log.csv'), row.names = F)
+```
+
+-   Tampoco se cumplen
+
+Log + 1
+-------
+
+``` r
+factores <- c('disturb_year', 'site', 'interaction(disturb_year, site)') 
+responses <- c('log1rs', 'log1rc', 'log1rt', 'log1rrs')
+homo_log1 <- c() 
+
+evires <- evires %>% 
+  mutate(
+    log1rs = log(rs + 1),
+    log1rc = log(rc + 1),
+    log1rt = log(rc + 1),
+    log1rrs = log(rrs +1 )
+)
+
+for (i in responses){ 
+  ht <- homogetest(resp_var = i, factores = factores, df = evires)
+  ht <- ht %>% mutate(response = i)
+  homo_log1 <- rbind(homo_log1, ht)
+}
+
+homo_log1 %>% pander()
+```
+
+<table>
+<colgroup>
+<col width="12%" />
+<col width="14%" />
+<col width="13%" />
+<col width="15%" />
+<col width="31%" />
+<col width="12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">fk_stat</th>
+<th align="center">fk_pvalue</th>
+<th align="center">lev_stat</th>
+<th align="center">lev_pvalue</th>
+<th align="center">factor</th>
+<th align="center">response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">1.128</td>
+<td align="center">0.2883</td>
+<td align="center">1.152</td>
+<td align="center">0.2833</td>
+<td align="center">disturb_year</td>
+<td align="center">log1rs</td>
+</tr>
+<tr class="even">
+<td align="center">4.259</td>
+<td align="center">0.03905</td>
+<td align="center">4.202</td>
+<td align="center">0.04052</td>
+<td align="center">site</td>
+<td align="center">log1rs</td>
+</tr>
+<tr class="odd">
+<td align="center">17.94</td>
+<td align="center">0.0004531</td>
+<td align="center">6.002</td>
+<td align="center">0.0004567</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">log1rs</td>
+</tr>
+<tr class="even">
+<td align="center">196.2</td>
+<td align="center">0</td>
+<td align="center">227.4</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">log1rc</td>
+</tr>
+<tr class="odd">
+<td align="center">134.3</td>
+<td align="center">0</td>
+<td align="center">143.7</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">log1rc</td>
+</tr>
+<tr class="even">
+<td align="center">176.4</td>
+<td align="center">0</td>
+<td align="center">64.66</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">log1rc</td>
+</tr>
+<tr class="odd">
+<td align="center">196.2</td>
+<td align="center">0</td>
+<td align="center">227.4</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">log1rt</td>
+</tr>
+<tr class="even">
+<td align="center">134.3</td>
+<td align="center">0</td>
+<td align="center">143.7</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">log1rt</td>
+</tr>
+<tr class="odd">
+<td align="center">176.4</td>
+<td align="center">0</td>
+<td align="center">64.66</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">log1rt</td>
+</tr>
+<tr class="even">
+<td align="center">107.1</td>
+<td align="center">0</td>
+<td align="center">119.2</td>
+<td align="center">0</td>
+<td align="center">disturb_year</td>
+<td align="center">log1rrs</td>
+</tr>
+<tr class="odd">
+<td align="center">86.45</td>
+<td align="center">0</td>
+<td align="center">91.37</td>
+<td align="center">0</td>
+<td align="center">site</td>
+<td align="center">log1rrs</td>
+</tr>
+<tr class="even">
+<td align="center">136.2</td>
+<td align="center">0</td>
+<td align="center">49.05</td>
+<td align="center">0</td>
+<td align="center">interaction(disturb_year, site)</td>
+<td align="center">log1rrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+write.csv(homo_log, 
+          file=paste0(di, '/out/anovas_resilience/homocedasticidad_log_plus_1.csv'), row.names = F)
+```
+
+-   Tampoco se cumplen
+
+Buscar mejor transformación de Box-Cox
+--------------------------------------
+
+-   Buscamos el mejor lambda para cada variable para estudiar posibles transformaciones
+
+#### Lambda Resilience
+
+``` r
+m  <- lm(rs ~ disturb_year*site, evires)
+b <- boxcox(m)
+```
+
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-52-1.png" style="display: block; margin: auto;" />
+
+``` r
+b$x[which.max(b$y)]
+```
+
+    ## [1] -0.1414141
+
+#### Lambda Resistance
+
+``` r
+m  <- lm(rt ~ disturb_year*site, evires)
+b <- boxcox(m)
+```
+
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-53-1.png" style="display: block; margin: auto;" />
+
+``` r
+b$x[which.max(b$y)]
+```
+
+    ## [1] 0.8282828
+
+#### Lambda Recovery
+
+``` r
+m  <- lm(rc ~ disturb_year*site, evires)
+b <- boxcox(m)
+```
+
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-54-1.png" style="display: block; margin: auto;" />
+
+``` r
+b$x[which.max(b$y)]
+```
+
+    ## [1] -1.151515
+
+#### Lambda Relative Resilience
+
+``` r
+m  <- lm(rrs ~ disturb_year*site, evires)
+b <- boxcox(m)
+b$x[which.max(b$y)]
+```
+
+Obtengo diferentes lambdas, lo cual complica las transformaciones. Por lo que opto por ROBUST ANOVA
+
+ROBUST ANOVA
+============
+
+-   Ver Wilcox (2005, 2012)
+-   Vamos a realizar un Robust factorial ANOVA. En concreto:
+
+-   Two-way robust factorial ANOVA on M-estimator
+-   pkg WRS2
+
+Recovery
+--------
+
+``` r
+robustANOVA <- function(df, resp_var, factores, 
+         alpha, nboot, treshold) {
+  # alpha: alpha ci for huber m-estimation 
+  # nboot: numer of iterations 
+  # treshoold for letter (posthoc)
+  # See http://rcompanion.org/rcompanion/d_08a.html 
+  
+  
+  # Create interaction 
+  df$interaction <- interaction(df$disturb_year, df$site)
+  
+  # Formulas 
+  formulaFull <- as.formula(paste0(resp_var,  " ~ ",
+                                 paste(factores, collapse = '+')))
+  
+  formula_A <- as.formula(paste0(resp_var,  " ~ ", factores[1]))
+  formula_B <- as.formula(paste0(resp_var,  " ~ ", factores[2]))
+  formula_AB <- as.formula(paste0(resp_var,  " ~ interaction"))
+  
+  
+  # Produce Huber M-estimators and confidence intervals by group
+  mest <- groupwiseHuber(formulaFull, data = df, ci.type = 'wald', conf.level = alpha)
+
+  # Two-way robust analysis 
+  x <- pbad2way(formulaFull, data = df, est = "mom", nboot = nboot) 
+  
+  out_ra <- data.frame(
+    term = c(x$varnames[2], 
+             x$varnames[3], 
+             paste0(x$varnames[2], ':', x$varnames[3])),
+    p_value = c(x$A.p.value, x$B.p.value, x$AB.p.value)) 
+  
+  # post-hoc 
+  ## factor A
+  pha <- pairwiseRobustTest(formula_A, data = df, est = "mom", 
+                            nboot = nboot, method="bonferroni")
+  ## factor B
+  phb <- pairwiseRobustTest(formula_B, data = df, est = "mom", 
+                            nboot = nboot, method="bonferroni")
+  ## interaction effect (AB)
+  phab <- pairwiseRobustTest(formula_AB, data = df, est = "mom", 
+                            nboot = nboot, method="bonferroni")
+  ## letters
+  letters_ph <- rbind(
+    cldList(comparison = pha$Comparison,
+        p.value    = pha$p.adjust,
+        threshold  = treshold),
+    cldList(comparison = phb$Comparison,
+        p.value    = phb$p.adjust,
+        threshold  = treshold), 
+    cldList(comparison = phab$Comparison,
+        p.value    = phab$p.adjust,
+        threshold  = treshold))
+  
+  ph <- rbind(pha, phb, phab)
+  
+  phRWS2 <- mcp2a(formulaFull, data=df, est = "mom", nboot = nboot)
+  
+  out <- list()  
+  out$mest <- mest # Huber M-estimators and Confidence Intervals
+  out$ra <- out_ra # Output for Two-way robust analysis (M-estimators)
+  out$letters_ph <- letters_ph # Letters comparison posthoc
+  out$ph <- ph # posthoc comparison usinng pairwiseRobustTest 
+  
+  print(out_ra)
+  print(phRWS2)
+  return(out)
+}
+```
+
+``` r
+factores = c('disturb_year', 'site', 'disturb_year:site')
+```
+
+``` r
+rars <- robustANOVA(df=evires, resp_var='rs', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## [1] "comparison 2 ..."
+    ## [1] "comparison 3 ..."
+    ## [1] "comparison 4 ..."
+    ## [1] "comparison 5 ..."
+    ## [1] "comparison 6 ..."
+    ## 
+    ##  
+    ##                term    p_value
+    ## 1      disturb_year 0.00000000
+    ## 2              site 0.00000000
+    ## 3 disturb_year:site 0.04566667
+    ## Call:
+    ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
+    ## 
+    ##                       psihat ci.lower ci.upper p-value
+    ## disturb_year1       -0.07125 -0.07959 -0.06309   0.000
+    ## site1               -0.02635 -0.03447 -0.01842   0.000
+    ## disturb_year1:site1  0.01036  0.00252  0.01934   0.018
+
+``` r
+rarc <- robustANOVA(df=evires, resp_var='rc', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## [1] "comparison 2 ..."
+    ## [1] "comparison 3 ..."
+    ## [1] "comparison 4 ..."
+    ## [1] "comparison 5 ..."
+    ## [1] "comparison 6 ..."
+    ## 
+    ##  
+    ##                term p_value
+    ## 1      disturb_year       0
+    ## 2              site       0
+    ## 3 disturb_year:site       0
+    ## Call:
+    ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
+    ## 
+    ##                      psihat ci.lower ci.upper p-value
+    ## disturb_year1       0.12129  0.11104  0.13330       0
+    ## site1               0.07067  0.05817  0.08093       0
+    ## disturb_year1:site1 0.13400  0.12262  0.14560       0
+
+``` r
+rart <- robustANOVA(df=evires, resp_var='rt', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## [1] "comparison 2 ..."
+    ## [1] "comparison 3 ..."
+    ## [1] "comparison 4 ..."
+    ## [1] "comparison 5 ..."
+    ## [1] "comparison 6 ..."
+    ## 
+    ##  
+    ##                term p_value
+    ## 1      disturb_year       0
+    ## 2              site       0
+    ## 3 disturb_year:site       0
+    ## Call:
+    ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
+    ## 
+    ##                       psihat ci.lower ci.upper p-value
+    ## disturb_year1       -0.16567 -0.17500 -0.15629       0
+    ## site1               -0.07410 -0.08261 -0.06417       0
+    ## disturb_year1:site1 -0.09022 -0.09979 -0.08087       0
+
+``` r
+rarrs <- robustANOVA(df=evires, resp_var='rrs', factores=factores,
+              alpha = 0.95, nboot = 3000, treshold = 0.01)
+```
+
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## 
+    ##  
+    ## [1] "comparison 1 ..."
+    ## [1] "comparison 2 ..."
+    ## [1] "comparison 3 ..."
+    ## [1] "comparison 4 ..."
+    ## [1] "comparison 5 ..."
+    ## [1] "comparison 6 ..."
+    ## 
+    ##  
+    ##                term p_value
+    ## 1      disturb_year       0
+    ## 2              site       0
+    ## 3 disturb_year:site       0
+    ## Call:
+    ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
+    ## 
+    ##                      psihat ci.lower ci.upper p-value
+    ## disturb_year1       0.09017  0.07964  0.09942       0
+    ## site1               0.04760  0.03856  0.05750       0
+    ## disturb_year1:site1 0.10647  0.09718  0.11565       0
+
+### Estimadores de huber
+
+``` r
+rars$mest$var <- 'rs'
+rarc$mest$var <- 'rc'
+rart$mest$var <- 'rt'
+rarrs$mest$var <- 'rrs'
+
+mhuber <- rbind(rarc$mest, rart$mest, rars$mest, rarrs$mest)
+mhuber %>% pander()
+```
+
+<table style="width:99%;">
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="5%" />
+<col width="13%" />
+<col width="15%" />
+<col width="15%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">disturb_year</th>
+<th align="center">site</th>
+<th align="center">n</th>
+<th align="center">M.Huber</th>
+<th align="center">lower.ci</th>
+<th align="center">upper.ci</th>
+<th align="center">var</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">1.169</td>
+<td align="center">1.161</td>
+<td align="center">1.177</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">1.066</td>
+<td align="center">1.058</td>
+<td align="center">1.074</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">1.042</td>
+<td align="center">1.036</td>
+<td align="center">1.047</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">1.071</td>
+<td align="center">1.067</td>
+<td align="center">1.075</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">0.819</td>
+<td align="center">0.8137</td>
+<td align="center">0.8243</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">0.9016</td>
+<td align="center">0.8958</td>
+<td align="center">0.9074</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">0.9472</td>
+<td align="center">0.9423</td>
+<td align="center">0.9521</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">0.9387</td>
+<td align="center">0.9336</td>
+<td align="center">0.9438</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">0.9553</td>
+<td align="center">0.9507</td>
+<td align="center">0.9599</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">0.9618</td>
+<td align="center">0.9573</td>
+<td align="center">0.9663</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">0.9855</td>
+<td align="center">0.9805</td>
+<td align="center">0.9905</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">1.004</td>
+<td align="center">0.9996</td>
+<td align="center">1.008</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">0.1362</td>
+<td align="center">0.1304</td>
+<td align="center">0.142</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2005</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">0.05819</td>
+<td align="center">0.05141</td>
+<td align="center">0.06498</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="odd">
+<td align="center">2012</td>
+<td align="center">Northern slope</td>
+<td align="center">471</td>
+<td align="center">0.03883</td>
+<td align="center">0.03396</td>
+<td align="center">0.0437</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">Southern slope</td>
+<td align="center">441</td>
+<td align="center">0.06618</td>
+<td align="center">0.06291</td>
+<td align="center">0.06946</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+### Pairwise comparison
+
+``` r
+rars$ph$var <- 'rs'
+rarc$ph$var <- 'rc'
+rart$ph$var <- 'rt'
+rarrs$ph$var <- 'rrs'
+
+pairwise <- rbind(rarc$ph, rart$ph, rars$ph, rarrs$ph) 
+pairwise %>% pander()
+```
+
+<table style="width:89%;">
+<colgroup>
+<col width="36%" />
+<col width="16%" />
+<col width="13%" />
+<col width="15%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Comparison</th>
+<th align="center">Statistic</th>
+<th align="center">p.value</th>
+<th align="center">p.adjust</th>
+<th align="center">var</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2005 - 2012 = 0</td>
+<td align="center">0.05994</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">0.03308</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">0.1276</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">0.1023</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">0.09598</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">-0.02531</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.03167</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.006357</td>
+<td align="center">0.2233</td>
+<td align="center">1</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2005 - 2012 = 0</td>
+<td align="center">-0.0853</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">-0.03784</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">-0.1279</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">-0.08216</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.1199</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">0.04579</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">0.008059</td>
+<td align="center">0.03267</td>
+<td align="center">0.196</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.03773</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2005 - 2012 = 0</td>
+<td align="center">-0.03583</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">-0.01344</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">-0.03045</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">-0.007997</td>
+<td align="center">0.026</td>
+<td align="center">0.156</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.0488</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">0.02245</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.01835</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.0408</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005 - 2012 = 0</td>
+<td align="center">0.04601</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">0.02191</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">0.09832</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">0.07703</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">0.06889</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">-0.02129</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="odd">
+<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.02943</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">-0.008148</td>
+<td align="center">0.03067</td>
+<td align="center">0.184</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+Interaction plot
+----------------
+
+###  Response ~ (x=Drought)
+
+``` r
+mhuber<- mhuber %>% 
+  mutate(var_sorted = case_when(var == "rc" ~ "1_rc",
+                                var == "rt" ~ "0_rt",
+                                var == "rs" ~ "2_rs",
+                                var == "rrs" ~ "3_rrs"))
+
+pd <- position_dodge(.2)
+
+robust_plot_evi_drought <- ggplot(mhuber, aes(x=disturb_year, y=M.Huber, color = site, group=site, fill=site)) + 
+  geom_errorbar(aes(ymin=lower.ci, ymax=upper.ci), 
+                width=.1, size=0.7, position=pd) + 
+  geom_line(aes(group=site,color=site, linetype=site), position=pd) + 
+  geom_point(shape=21, size=3.5, position=pd) +
+  facet_wrap(~var_sorted, nrow = 2, scales = 'free_y',
+             labeller=as_labeller(c('0_rt' = 'Resistance', 
+                                 '1_rc' = 'Recovery',
+                                 '2_rs' = 'Resilience',
+                                 '3_rrs' = 'Relative Resilience'))) +
+  scale_color_manual(values=c('black','blue')) + 
+  scale_fill_manual(values=c('black','blue')) + theme_bw() +
+  scale_linetype_manual(values=c("solid", "dashed")) +
+  theme(panel.grid.minor = element_blank(), 
+        strip.background = element_rect(colour='black', 
+                                        fill='white'),
+        legend.position="bottom") +
+  ylab('') + xlab('Drought event')
+
+robust_plot_evi_drought 
+```
+
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-64-1.png" style="display: block; margin: auto;" />
+
+``` r
+pdf(paste0(di, '/images/resilience/robust_plot_evi_drought.pdf'), width=9, height = 9)
+robust_plot_evi_drought 
+dev.off()
+```
+
+    ## quartz_off_screen 
+    ##                 2
+
+###  Response ~ (x=site)
+
+``` r
+pd <- position_dodge(.2)
+
+robust_plot_evi_site <- ggplot(mhuber, aes(x=site, y=M.Huber, color = disturb_year, group=disturb_year, fill=disturb_year)) + 
+  geom_errorbar(aes(ymin=lower.ci, ymax=upper.ci), 
+                width=.1, size=0.7, position=pd) + 
+  geom_line(aes(group=disturb_year,color=disturb_year, linetype=disturb_year), position=pd) + 
+  geom_point(shape=21, size=3.5, position=pd) +
+  facet_wrap(~var_sorted, nrow = 2, scales = 'free_y',
+             labeller=as_labeller(c('0_rt' = 'Resistance', 
+                                 '1_rc' = 'Recovery',
+                                 '2_rs' = 'Resilience',
+                                 '3_rrs' = 'Relative Resilience'))) +
+  scale_color_manual(values=c('black','blue')) + 
+  scale_fill_manual(values=c('black','blue')) + theme_bw() +
+  scale_linetype_manual(values=c("solid", "dashed")) +
+  theme(panel.grid.minor = element_blank(), 
+        strip.background = element_rect(colour='black', 
+                                        fill='white'),
+        legend.position="bottom") +
+  ylab('') + xlab('Drought event')
+
+
+robust_plot_evi_site 
+```
+
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-65-1.png" style="display: block; margin: auto;" />
+
+``` r
+pdf(paste0(di, '/images/resilience/robust_plot_evi_site.pdf'), width=9, height = 9)
+robust_plot_evi_site 
+dev.off()
+```
+
+    ## quartz_off_screen 
+    ##                 2
+
+``` r
+# Export data 
+write.csv(mhuber, file=paste0(di, '/out/anovas_resilience/robust_mhuber.csv'), row.names = F)
+write.csv(pairwise, file=paste0(di, '/out/anovas_resilience/robust_pairwise.csv'), row.names = F)
+```

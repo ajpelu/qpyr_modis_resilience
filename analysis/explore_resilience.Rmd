@@ -13,8 +13,8 @@ opts_chunk$set(fig.align='center', message = FALSE, warning = FALSE)
 
 ```{r wd, echo=FALSE}
 #---------------------------------
-#machine <- 'ajpelu'
-machine <- 'ajpeluLap'
+machine <- 'ajpelu'
+#machine <- 'ajpeluLap'
 di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
 #---------------------------------
 ```
@@ -565,19 +565,22 @@ nrrsAB$var <- 'rrs'
 ```
 
 ```{r}
-normtestA <- nrcA %>% bind_rows(nrtA, nrsA, nrrsA) %>% pander()
+normtestA <- rbind(nrcA, nrtA, nrsA, nrrsA) 
+normtestA %>% pander()
 write.csv(normtestA, 
           file=paste0(di, '/out/anovas_resilience/normo_disturb_year.csv'), row.names = F)
 ```
 
 ```{r}
-normtestB <- nrcB %>% bind_rows(nrtB, nrsB, nrrsB) %>% pander()
+normtestB <- rbind(nrcB, nrtB, nrsB, nrrsB) 
+normtestB %>% pander()
 write.csv(normtestB, 
           file=paste0(di, '/out/anovas_resilience/normo_site.csv'), row.names = F)
 ```
 
 ```{r}
-normtestAB <- nrcAB %>% bind_rows(nrtAB, nrsAB, nrrsAB) %>% pander()
+normtestAB <- rbind(nrcAB, nrtAB, nrsAB, nrrsAB) 
+normtestAB%>% pander()
 write.csv(normtestAB, 
           file=paste0(di, '/out/anovas_resilience/normo_disturb_year_site.csv'), row.names = F)
 ```
@@ -726,7 +729,7 @@ b$x[which.max(b$y)]
 ```
 
 #### Lambda Relative Resilience
-```{r}
+```{r, eval=FALSE}
 m  <- lm(rrs ~ disturb_year*site, evires)
 b <- boxcox(m)
 b$x[which.max(b$y)]
@@ -815,6 +818,7 @@ robustANOVA <- function(df, resp_var, factores,
   return(out)
 }
 ```
+
 ```{r}
 factores = c('disturb_year', 'site', 'disturb_year:site')
 ```
@@ -842,20 +846,106 @@ rarrs <- robustANOVA(df=evires, resp_var='rrs', factores=factores,
 
 
 
-### ahora toca los plots y guardar los datos 
+### Estimadores de huber 
+```{r} 
+rars$mest$var <- 'rs'
+rarc$mest$var <- 'rc'
+rart$mest$var <- 'rt'
+rarrs$mest$var <- 'rrs'
+
+mhuber <- rbind(rarc$mest, rart$mest, rars$mest, rarrs$mest)
+mhuber %>% pander()
+```
+
+### Pairwise comparison
+```{r}
+
+rars$ph$var <- 'rs'
+rarc$ph$var <- 'rc'
+rart$ph$var <- 'rt'
+rarrs$ph$var <- 'rrs'
+
+pairwise <- rbind(rarc$ph, rart$ph, rars$ph, rarrs$ph) 
+pairwise %>% pander()
+```
+
+
+
+## Interaction plot 
+### Response ~ (x=Drought)
+
+```{r}
+mhuber<- mhuber %>% 
+  mutate(var_sorted = case_when(var == "rc" ~ "1_rc",
+                                var == "rt" ~ "0_rt",
+                                var == "rs" ~ "2_rs",
+                                var == "rrs" ~ "3_rrs"))
 
 pd <- position_dodge(.2)
-ggplot(mest, aes(x=disturb_year, y=M.Huber, color = site)) + 
-  geom_point(shape=19, size=4, position=pd) +
-  geom_errorbar(aes(ymin=lower.ci,
-                      ymax=upper.ci),
-                   width=.2, size=0.7, position=pd) 
+
+robust_plot_evi_drought <- ggplot(mhuber, aes(x=disturb_year, y=M.Huber, color = site, group=site, fill=site)) + 
+  geom_errorbar(aes(ymin=lower.ci, ymax=upper.ci), 
+                width=.1, size=0.7, position=pd) + 
+  geom_line(aes(group=site,color=site, linetype=site), position=pd) + 
+  geom_point(shape=21, size=3.5, position=pd) +
+  facet_wrap(~var_sorted, nrow = 2, scales = 'free_y',
+             labeller=as_labeller(c('0_rt' = 'Resistance', 
+                                 '1_rc' = 'Recovery',
+                                 '2_rs' = 'Resilience',
+                                 '3_rrs' = 'Relative Resilience'))) +
+  scale_color_manual(values=c('black','blue')) + 
+  scale_fill_manual(values=c('black','blue')) + theme_bw() +
+  scale_linetype_manual(values=c("solid", "dashed")) +
+  theme(panel.grid.minor = element_blank(), 
+        strip.background = element_rect(colour='black', 
+                                        fill='white'),
+        legend.position="bottom") +
+  ylab('') + xlab('Drought event')
+
+robust_plot_evi_drought 
+
+pdf(paste0(di, '/images/resilience/robust_plot_evi_drought.pdf'), width=9, height = 9)
+robust_plot_evi_drought 
+dev.off()
+```
 
 
+### Response ~ (x=site)
+```{r}
+pd <- position_dodge(.2)
+
+robust_plot_evi_site <- ggplot(mhuber, aes(x=site, y=M.Huber, color = disturb_year, group=disturb_year, fill=disturb_year)) + 
+  geom_errorbar(aes(ymin=lower.ci, ymax=upper.ci), 
+                width=.1, size=0.7, position=pd) + 
+  geom_line(aes(group=disturb_year,color=disturb_year, linetype=disturb_year), position=pd) + 
+  geom_point(shape=21, size=3.5, position=pd) +
+  facet_wrap(~var_sorted, nrow = 2, scales = 'free_y',
+             labeller=as_labeller(c('0_rt' = 'Resistance', 
+                                 '1_rc' = 'Recovery',
+                                 '2_rs' = 'Resilience',
+                                 '3_rrs' = 'Relative Resilience'))) +
+  scale_color_manual(values=c('black','blue')) + 
+  scale_fill_manual(values=c('black','blue')) + theme_bw() +
+  scale_linetype_manual(values=c("solid", "dashed")) +
+  theme(panel.grid.minor = element_blank(), 
+        strip.background = element_rect(colour='black', 
+                                        fill='white'),
+        legend.position="bottom") +
+  ylab('') + xlab('Drought event')
 
 
+robust_plot_evi_site 
+
+pdf(paste0(di, '/images/resilience/robust_plot_evi_site.pdf'), width=9, height = 9)
+robust_plot_evi_site 
+dev.off()
+```
 
 
-
+```{r}
+# Export data 
+write.csv(mhuber, file=paste0(di, '/out/anovas_resilience/robust_mhuber.csv'), row.names = F)
+write.csv(pairwise, file=paste0(di, '/out/anovas_resilience/robust_pairwise.csv'), row.names = F)
+```
 
 
