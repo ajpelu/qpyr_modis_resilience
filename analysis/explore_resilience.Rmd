@@ -13,8 +13,8 @@ opts_chunk$set(fig.align='center', message = FALSE, warning = FALSE)
 
 ```{r wd, echo=FALSE}
 #---------------------------------
-machine <- 'ajpelu'
-#machine <- 'ajpeluLap'
+#machine <- 'ajpelu'
+machine <- 'ajpeluLap'
 di <- paste('/Users/', machine, '/Dropbox/phd/phd_repos/qpyr_modis_resilience', sep='')
 #---------------------------------
 ```
@@ -700,7 +700,7 @@ write.csv(homo_log,
 
 * Tampoco se cumplen 
 
-## Buscar mejor transformación de Box-Cox 
+## Buscar mejor transformación de Box-Cox 
 
 * Buscamos el mejor lambda para cada variable para estudiar posibles transformaciones
 
@@ -843,7 +843,6 @@ rarrs <- robustANOVA(df=evires, resp_var='rrs', factores=factores,
 
 
 ### ahora toca los plots y guardar los datos 
-
 
 pd <- position_dodge(.2)
 ggplot(mest, aes(x=disturb_year, y=M.Huber, color = site)) + 
