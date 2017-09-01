@@ -58,8 +58,8 @@ evires <- raw_evires %>%
       pop %in% c(6,7,8) ~ 'Southern slope',
       pop == 9 ~ 'out')),
     clu_pop2 = as.factor(case_when(
-      pop %in% c(1,2,3,4,5) ~ 'Northern slope',
-      pop %in% c(6,7,8) ~ 'Southern slope',
+      pop %in% c(1,2,3,4,5) ~ 'N',
+      pop %in% c(6,7,8) ~ 'S',
       pop == 9 ~ 'out'))) %>% 
   filter(clu_pop != 'out')
 
@@ -745,8 +745,6 @@ Obtengo diferentes lambdas, lo cual complica las transformaciones. Por lo que op
   * Two-way robust factorial ANOVA on M-estimator
   * pkg WRS2
   
-## Recovery
-
 
 ```{r}
 robustANOVA <- function(df, resp_var, factores, 
@@ -771,6 +769,8 @@ robustANOVA <- function(df, resp_var, factores,
   
   # Produce Huber M-estimators and confidence intervals by group
   mest <- groupwiseHuber(formulaFull, data = df, ci.type = 'wald', conf.level = alpha)
+  mest_a <- groupwiseHuber(formula_A, data = df, ci.type = 'wald', conf.level = alpha)
+  mest_b <- groupwiseHuber(formula_B, data = df, ci.type = 'wald', conf.level = alpha)
 
   # Two-way robust analysis 
   x <- pbad2way(formulaFull, data = df, est = "mom", nboot = nboot) 
@@ -785,6 +785,7 @@ robustANOVA <- function(df, resp_var, factores,
   ## factor A
   pha <- pairwiseRobustTest(formula_A, data = df, est = "mom", 
                             nboot = nboot, method="bonferroni")
+  
   ## factor B
   phb <- pairwiseRobustTest(formula_B, data = df, est = "mom", 
                             nboot = nboot, method="bonferroni")
@@ -809,12 +810,15 @@ robustANOVA <- function(df, resp_var, factores,
   
   out <- list()  
   out$mest <- mest # Huber M-estimators and Confidence Intervals
+  out$mest_a <- mest_a
+  out$mest_b <- mest_b
   out$ra <- out_ra # Output for Two-way robust analysis (M-estimators)
   out$letters_ph <- letters_ph # Letters comparison posthoc
   out$ph <- ph # posthoc comparison usinng pairwiseRobustTest 
   
   print(out_ra)
   print(phRWS2)
+  
   return(out)
 }
 ```
@@ -856,6 +860,28 @@ rarrs$mest$var <- 'rrs'
 mhuber <- rbind(rarc$mest, rart$mest, rars$mest, rarrs$mest)
 mhuber %>% pander()
 ```
+
+```{r}
+rars$mest_a$var <- 'rs'
+rarc$mest_a$var <- 'rc'
+rart$mest_a$var <- 'rt'
+rarrs$mest_a$var <- 'rrs'
+
+mhuber_a <- rbind(rarc$mest_a, rart$mest_a, rars$mest_a, rarrs$mest_a)
+mhuber_a %>% pander()
+```
+
+```{r}
+rars$mest_b$var <- 'rs'
+rarc$mest_b$var <- 'rc'
+rart$mest_b$var <- 'rt'
+rarrs$mest_b$var <- 'rrs'
+
+mhuber_b <- rbind(rarc$mest_b, rart$mest_b, rars$mest_b, rarrs$mest_b)
+mhuber_b %>% pander()
+```
+
+
 
 ### Pairwise comparison
 ```{r}
@@ -945,7 +971,39 @@ dev.off()
 ```{r}
 # Export data 
 write.csv(mhuber, file=paste0(di, '/out/anovas_resilience/robust_mhuber.csv'), row.names = F)
+write.csv(mhuber_a, file=paste0(di, '/out/anovas_resilience/robust_mhuber_a.csv'), row.names = F)
+write.csv(mhuber_b, file=paste0(di, '/out/anovas_resilience/robust_mhuber_b.csv'), row.names = F)
+
 write.csv(pairwise, file=paste0(di, '/out/anovas_resilience/robust_pairwise.csv'), row.names = F)
 ```
+
+### GLM approach 
+
+```{r}
+
+m <- glm(rs~disturb_year*site, family='Gamma',data = evires)
+print(summary(m), signif.stars = FALSE, digits=2)
+
+Anova(m, "II")
+
+
+anova(m)
+library(multcomp)
+summary(glht(m, mcp(site="Tukey")))
+summary(glht(m, mcp(disturb_year="Tukey")))
+
+
+
+
+anova(glm_rs)
+e1 <- resid(glm_rs, type = 'pearson')
+n <- nrow(evires)
+p <- length(coef(glm_rs))
+sum(e1^2) / (n -p)
+
+```
+
+
+
 
 

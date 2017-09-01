@@ -23,8 +23,8 @@ evires <- raw_evires %>%
       pop %in% c(6,7,8) ~ 'Southern slope',
       pop == 9 ~ 'out')),
     clu_pop2 = as.factor(case_when(
-      pop %in% c(1,2,3,4,5) ~ 'Northern slope',
-      pop %in% c(6,7,8) ~ 'Southern slope',
+      pop %in% c(1,2,3,4,5) ~ 'N',
+      pop %in% c(6,7,8) ~ 'S',
       pop == 9 ~ 'out'))) %>% 
   filter(clu_pop != 'out')
 
@@ -187,24 +187,22 @@ postH_rc <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Clu pop ###
     ## $lsmeans
-    ##  site             lsmean          SE   df lower.CL upper.CL
-    ##  Northern slope 1.107615 0.002220056 1820 1.103261 1.111969
-    ##  Southern slope 1.069759 0.002294326 1820 1.065259 1.074259
+    ##  site   lsmean          SE   df lower.CL upper.CL
+    ##  N    1.107615 0.002220056 1820 1.103261 1.111969
+    ##  S    1.069759 0.002294326 1820 1.065259 1.074259
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                          estimate          SE   df t.ratio
-    ##  Northern slope - Southern slope 0.03785579 0.003192582 1820  11.857
-    ##  p.value
-    ##   <.0001
+    ##  contrast   estimate          SE   df t.ratio p.value
+    ##  N - S    0.03785579 0.003192582 1820  11.857  <.0001
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## 
-    ##  site             lsmean          SE   df lower.CL upper.CL .group
-    ##  Southern slope 1.069759 0.002294326 1820 1.064612 1.074906  a    
-    ##  Northern slope 1.107615 0.002220056 1820 1.102635 1.112595   b   
+    ##  site   lsmean          SE   df lower.CL upper.CL .group
+    ##  S    1.069759 0.002294326 1820 1.064612 1.074906  a    
+    ##  N    1.107615 0.002220056 1820 1.102635 1.112595   b   
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
@@ -213,29 +211,22 @@ postH_rc <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Event:Clu pop ###
     ## $lsmeans
-    ##  disturb_year site             lsmean          SE   df lower.CL upper.CL
-    ##  2005         Northern slope 1.172113 0.003139633 1820 1.165955 1.178271
-    ##  2012         Northern slope 1.043117 0.003139633 1820 1.036959 1.049275
-    ##  2005         Southern slope 1.068512 0.003244666 1820 1.062148 1.074876
-    ##  2012         Southern slope 1.071007 0.003244666 1820 1.064643 1.077370
+    ##  disturb_year site   lsmean          SE   df lower.CL upper.CL
+    ##  2005         N    1.172113 0.003139633 1820 1.165955 1.178271
+    ##  2012         N    1.043117 0.003139633 1820 1.036959 1.049275
+    ##  2005         S    1.068512 0.003244666 1820 1.062148 1.074876
+    ##  2012         S    1.071007 0.003244666 1820 1.064643 1.077370
     ## 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                                      estimate          SE   df
-    ##  2005,Northern slope - 2012,Northern slope  0.128996090 0.004440112 1820
-    ##  2005,Northern slope - 2005,Southern slope  0.103601172 0.004514992 1820
-    ##  2005,Northern slope - 2012,Southern slope  0.101106495 0.004514992 1820
-    ##  2012,Northern slope - 2005,Southern slope -0.025394918 0.004514992 1820
-    ##  2012,Northern slope - 2012,Southern slope -0.027889595 0.004514992 1820
-    ##  2005,Southern slope - 2012,Southern slope -0.002494677 0.004588651 1820
-    ##  t.ratio p.value
-    ##   29.052  <.0001
-    ##   22.946  <.0001
-    ##   22.394  <.0001
-    ##   -5.625  <.0001
-    ##   -6.177  <.0001
-    ##   -0.544  1.0000
+    ##  contrast            estimate          SE   df t.ratio p.value
+    ##  2005,N - 2012,N  0.128996090 0.004440112 1820  29.052  <.0001
+    ##  2005,N - 2005,S  0.103601172 0.004514992 1820  22.946  <.0001
+    ##  2005,N - 2012,S  0.101106495 0.004514992 1820  22.394  <.0001
+    ##  2012,N - 2005,S -0.025394918 0.004514992 1820  -5.625  <.0001
+    ##  2012,N - 2012,S -0.027889595 0.004514992 1820  -6.177  <.0001
+    ##  2005,S - 2012,S -0.002494677 0.004588651 1820  -0.544  1.0000
     ## 
     ## P value adjustment: bonferroni method for 6 tests
 
@@ -414,24 +405,22 @@ postH_rt <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Clu pop ###
     ## $lsmeans
-    ##  site              lsmean          SE   df  lower.CL  upper.CL
-    ##  Northern slope 0.8836057 0.001792878 1820 0.8800894 0.8871220
-    ##  Southern slope 0.9209905 0.001852856 1820 0.9173566 0.9246245
+    ##  site    lsmean          SE   df  lower.CL  upper.CL
+    ##  N    0.8836057 0.001792878 1820 0.8800894 0.8871220
+    ##  S    0.9209905 0.001852856 1820 0.9173566 0.9246245
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                           estimate          SE   df t.ratio
-    ##  Northern slope - Southern slope -0.03738486 0.002578272 1820   -14.5
-    ##  p.value
-    ##   <.0001
+    ##  contrast    estimate          SE   df t.ratio p.value
+    ##  N - S    -0.03738486 0.002578272 1820   -14.5  <.0001
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## 
-    ##  site              lsmean          SE   df  lower.CL  upper.CL .group
-    ##  Northern slope 0.8836057 0.001792878 1820 0.8795838 0.8876276  a    
-    ##  Southern slope 0.9209905 0.001852856 1820 0.9168341 0.9251470   b   
+    ##  site    lsmean          SE   df  lower.CL  upper.CL .group
+    ##  N    0.8836057 0.001792878 1820 0.8795838 0.8876276  a    
+    ##  S    0.9209905 0.001852856 1820 0.9168341 0.9251470   b   
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
@@ -440,34 +429,22 @@ postH_rt <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Event:Clu pop ###
     ## $lsmeans
-    ##  disturb_year site              lsmean          SE   df  lower.CL
-    ##  2005         Northern slope 0.8189321 0.002535512 1820 0.8139593
-    ##  2012         Northern slope 0.9482792 0.002535512 1820 0.9433064
-    ##  2005         Southern slope 0.9025485 0.002620335 1820 0.8974093
-    ##  2012         Southern slope 0.9394325 0.002620335 1820 0.9342934
-    ##   upper.CL
-    ##  0.8239049
-    ##  0.9532521
-    ##  0.9076877
-    ##  0.9445717
+    ##  disturb_year site    lsmean          SE   df  lower.CL  upper.CL
+    ##  2005         N    0.8189321 0.002535512 1820 0.8139593 0.8239049
+    ##  2012         N    0.9482792 0.002535512 1820 0.9433064 0.9532521
+    ##  2005         S    0.9025485 0.002620335 1820 0.8974093 0.9076877
+    ##  2012         S    0.9394325 0.002620335 1820 0.9342934 0.9445717
     ## 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                                     estimate          SE   df
-    ##  2005,Northern slope - 2012,Northern slope -0.12934712 0.003585755 1820
-    ##  2005,Northern slope - 2005,Southern slope -0.08361641 0.003646227 1820
-    ##  2005,Northern slope - 2012,Southern slope -0.12050043 0.003646227 1820
-    ##  2012,Northern slope - 2005,Southern slope  0.04573071 0.003646227 1820
-    ##  2012,Northern slope - 2012,Southern slope  0.00884669 0.003646227 1820
-    ##  2005,Southern slope - 2012,Southern slope -0.03688402 0.003705713 1820
-    ##  t.ratio p.value
-    ##  -36.072  <.0001
-    ##  -22.932  <.0001
-    ##  -33.048  <.0001
-    ##   12.542  <.0001
-    ##    2.426  0.0921
-    ##   -9.953  <.0001
+    ##  contrast           estimate          SE   df t.ratio p.value
+    ##  2005,N - 2012,N -0.12934712 0.003585755 1820 -36.072  <.0001
+    ##  2005,N - 2005,S -0.08361641 0.003646227 1820 -22.932  <.0001
+    ##  2005,N - 2012,S -0.12050043 0.003646227 1820 -33.048  <.0001
+    ##  2012,N - 2005,S  0.04573071 0.003646227 1820  12.542  <.0001
+    ##  2012,N - 2012,S  0.00884669 0.003646227 1820   2.426  0.0921
+    ##  2005,S - 2012,S -0.03688402 0.003705713 1820  -9.953  <.0001
     ## 
     ## P value adjustment: bonferroni method for 6 tests
 
@@ -646,24 +623,22 @@ postH_rs <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Clu pop ###
     ## $lsmeans
-    ##  site              lsmean          SE   df  lower.CL  upper.CL
-    ##  Northern slope 0.9720535 0.001613229 1820 0.9688896 0.9752175
-    ##  Southern slope 0.9828710 0.001667198 1820 0.9796012 0.9861408
+    ##  site    lsmean          SE   df  lower.CL  upper.CL
+    ##  N    0.9720535 0.001613229 1820 0.9688896 0.9752175
+    ##  S    0.9828710 0.001667198 1820 0.9796012 0.9861408
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                           estimate          SE   df t.ratio
-    ##  Northern slope - Southern slope -0.01081743 0.002319926 1820  -4.663
-    ##  p.value
-    ##   <.0001
+    ##  contrast    estimate          SE   df t.ratio p.value
+    ##  N - S    -0.01081743 0.002319926 1820  -4.663  <.0001
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## 
-    ##  site              lsmean          SE   df  lower.CL  upper.CL .group
-    ##  Northern slope 0.9720535 0.001613229 1820 0.9684347 0.9756724  a    
-    ##  Southern slope 0.9828710 0.001667198 1820 0.9791310 0.9866109   b   
+    ##  site    lsmean          SE   df  lower.CL  upper.CL .group
+    ##  N    0.9720535 0.001613229 1820 0.9684347 0.9756724  a    
+    ##  S    0.9828710 0.001667198 1820 0.9791310 0.9866109   b   
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
@@ -672,34 +647,22 @@ postH_rs <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Event:Clu pop ###
     ## $lsmeans
-    ##  disturb_year site              lsmean          SE   df  lower.CL
-    ##  2005         Northern slope 0.9565664 0.002281451 1820 0.9520919
-    ##  2012         Northern slope 0.9875407 0.002281451 1820 0.9830661
-    ##  2005         Southern slope 0.9608736 0.002357774 1820 0.9562493
-    ##  2012         Southern slope 1.0048684 0.002357774 1820 1.0002442
-    ##   upper.CL
-    ##  0.9610410
-    ##  0.9920152
-    ##  0.9654978
-    ##  1.0094926
+    ##  disturb_year site    lsmean          SE   df  lower.CL  upper.CL
+    ##  2005         N    0.9565664 0.002281451 1820 0.9520919 0.9610410
+    ##  2012         N    0.9875407 0.002281451 1820 0.9830661 0.9920152
+    ##  2005         S    0.9608736 0.002357774 1820 0.9562493 0.9654978
+    ##  2012         S    1.0048684 0.002357774 1820 1.0002442 1.0094926
     ## 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                                      estimate          SE   df
-    ##  2005,Northern slope - 2012,Northern slope -0.030974221 0.003226458 1820
-    ##  2005,Northern slope - 2005,Southern slope -0.004307134 0.003280871 1820
-    ##  2005,Northern slope - 2012,Southern slope -0.048301950 0.003280871 1820
-    ##  2012,Northern slope - 2005,Southern slope  0.026667087 0.003280871 1820
-    ##  2012,Northern slope - 2012,Southern slope -0.017327728 0.003280871 1820
-    ##  2005,Southern slope - 2012,Southern slope -0.043994816 0.003334396 1820
-    ##  t.ratio p.value
-    ##   -9.600  <.0001
-    ##   -1.313  1.0000
-    ##  -14.722  <.0001
-    ##    8.128  <.0001
-    ##   -5.281  <.0001
-    ##  -13.194  <.0001
+    ##  contrast            estimate          SE   df t.ratio p.value
+    ##  2005,N - 2012,N -0.030974221 0.003226458 1820  -9.600  <.0001
+    ##  2005,N - 2005,S -0.004307134 0.003280871 1820  -1.313  1.0000
+    ##  2005,N - 2012,S -0.048301950 0.003280871 1820 -14.722  <.0001
+    ##  2012,N - 2005,S  0.026667087 0.003280871 1820   8.128  <.0001
+    ##  2012,N - 2012,S -0.017327728 0.003280871 1820  -5.281  <.0001
+    ##  2005,S - 2012,S -0.043994816 0.003334396 1820 -13.194  <.0001
     ## 
     ## P value adjustment: bonferroni method for 6 tests
 
@@ -878,24 +841,22 @@ postH_rrs <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Clu pop ###
     ## $lsmeans
-    ##  site               lsmean          SE   df   lower.CL   upper.CL
-    ##  Northern slope 0.08844787 0.001836681 1820 0.08484564 0.09205009
-    ##  Southern slope 0.06188044 0.001898125 1820 0.05815770 0.06560317
+    ##  site     lsmean          SE   df   lower.CL   upper.CL
+    ##  N    0.08844787 0.001836681 1820 0.08484564 0.09205009
+    ##  S    0.06188044 0.001898125 1820 0.05815770 0.06560317
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                          estimate          SE   df t.ratio
-    ##  Northern slope - Southern slope 0.02656743 0.002641264 1820  10.059
-    ##  p.value
-    ##   <.0001
+    ##  contrast   estimate          SE   df t.ratio p.value
+    ##  N - S    0.02656743 0.002641264 1820  10.059  <.0001
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## 
-    ##  site               lsmean          SE   df   lower.CL   upper.CL .group
-    ##  Southern slope 0.06188044 0.001898125 1820 0.05762245 0.06613842  a    
-    ##  Northern slope 0.08844787 0.001836681 1820 0.08432772 0.09256802   b   
+    ##  site     lsmean          SE   df   lower.CL   upper.CL .group
+    ##  S    0.06188044 0.001898125 1820 0.05762245 0.06613842  a    
+    ##  N    0.08844787 0.001836681 1820 0.08432772 0.09256802   b   
     ## 
     ## Results are averaged over the levels of: disturb_year 
     ## Confidence level used: 0.95 
@@ -904,34 +865,22 @@ postH_rrs <- phc(mymodel = mymodel, resp_var = resp_var)
     ## 
     ## ### Event:Clu pop ###
     ## $lsmeans
-    ##  disturb_year site               lsmean          SE   df  lower.CL
-    ##  2005         Northern slope 0.13763432 0.002597459 1820 0.1325400
-    ##  2012         Northern slope 0.03926142 0.002597459 1820 0.0341671
-    ##  2005         Southern slope 0.05832504 0.002684355 1820 0.0530603
-    ##  2012         Southern slope 0.06543584 0.002684355 1820 0.0601711
-    ##    upper.CL
-    ##  0.14272863
-    ##  0.04435573
-    ##  0.06358978
-    ##  0.07070057
+    ##  disturb_year site     lsmean          SE   df  lower.CL   upper.CL
+    ##  2005         N    0.13763432 0.002597459 1820 0.1325400 0.14272863
+    ##  2012         N    0.03926142 0.002597459 1820 0.0341671 0.04435573
+    ##  2005         S    0.05832504 0.002684355 1820 0.0530603 0.06358978
+    ##  2012         S    0.06543584 0.002684355 1820 0.0601711 0.07070057
     ## 
     ## Confidence level used: 0.95 
     ## 
     ## $contrasts
-    ##  contrast                                      estimate          SE   df
-    ##  2005,Northern slope - 2012,Northern slope  0.098372900 0.003673362 1820
-    ##  2005,Northern slope - 2005,Southern slope  0.079309278 0.003735312 1820
-    ##  2005,Northern slope - 2012,Southern slope  0.072198481 0.003735312 1820
-    ##  2012,Northern slope - 2005,Southern slope -0.019063621 0.003735312 1820
-    ##  2012,Northern slope - 2012,Southern slope -0.026174419 0.003735312 1820
-    ##  2005,Southern slope - 2012,Southern slope -0.007110797 0.003796251 1820
-    ##  t.ratio p.value
-    ##   26.780  <.0001
-    ##   21.232  <.0001
-    ##   19.329  <.0001
-    ##   -5.104  <.0001
-    ##   -7.007  <.0001
-    ##   -1.873  0.3673
+    ##  contrast            estimate          SE   df t.ratio p.value
+    ##  2005,N - 2012,N  0.098372900 0.003673362 1820  26.780  <.0001
+    ##  2005,N - 2005,S  0.079309278 0.003735312 1820  21.232  <.0001
+    ##  2005,N - 2012,S  0.072198481 0.003735312 1820  19.329  <.0001
+    ##  2012,N - 2005,S -0.019063621 0.003735312 1820  -5.104  <.0001
+    ##  2012,N - 2012,S -0.026174419 0.003735312 1820  -7.007  <.0001
+    ##  2005,S - 2012,S -0.007110797 0.003796251 1820  -1.873  0.3673
     ## 
     ## P value adjustment: bonferroni method for 6 tests
 
@@ -1390,9 +1339,9 @@ normtestB <- rbind(nrcB, nrtB, nrsB, nrrsB)
 normtestB %>% pander()
 ```
 
-<table style="width:58%;">
+<table style="width:47%;">
 <colgroup>
-<col width="20%" />
+<col width="9%" />
 <col width="16%" />
 <col width="13%" />
 <col width="6%" />
@@ -1407,49 +1356,49 @@ normtestB %>% pander()
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9768</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="even">
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9889</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="odd">
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9909</td>
 <td align="center">1e-05</td>
 <td align="center">rt</td>
 </tr>
 <tr class="even">
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9981</td>
 <td align="center">0.4341</td>
 <td align="center">rt</td>
 </tr>
 <tr class="odd">
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9901</td>
 <td align="center">1e-05</td>
 <td align="center">rs</td>
 </tr>
 <tr class="even">
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9968</td>
 <td align="center">0.0752</td>
 <td align="center">rs</td>
 </tr>
 <tr class="odd">
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9942</td>
 <td align="center">0.00113</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="even">
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9905</td>
 <td align="center">2e-05</td>
 <td align="center">rrs</td>
@@ -1467,10 +1416,10 @@ normtestAB <- rbind(nrcAB, nrtAB, nrsAB, nrrsAB)
 normtestAB%>% pander()
 ```
 
-<table style="width:79%;">
+<table style="width:68%;">
 <colgroup>
 <col width="20%" />
-<col width="20%" />
+<col width="9%" />
 <col width="16%" />
 <col width="13%" />
 <col width="6%" />
@@ -1487,112 +1436,112 @@ normtestAB%>% pander()
 <tbody>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9873</td>
 <td align="center">0.00041</td>
 <td align="center">rc</td>
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9922</td>
 <td align="center">0.02101</td>
 <td align="center">rc</td>
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9907</td>
 <td align="center">0.0045</td>
 <td align="center">rc</td>
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9905</td>
 <td align="center">0.00597</td>
 <td align="center">rc</td>
 </tr>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9932</td>
 <td align="center">0.03304</td>
 <td align="center">rt</td>
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.994</td>
 <td align="center">0.07917</td>
 <td align="center">rt</td>
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9959</td>
 <td align="center">0.2602</td>
 <td align="center">rt</td>
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9964</td>
 <td align="center">0.4178</td>
 <td align="center">rt</td>
 </tr>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9949</td>
 <td align="center">0.1252</td>
 <td align="center">rs</td>
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9959</td>
 <td align="center">0.3181</td>
 <td align="center">rs</td>
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9832</td>
 <td align="center">3e-05</td>
 <td align="center">rs</td>
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9916</td>
 <td align="center">0.01349</td>
 <td align="center">rs</td>
 </tr>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.994</td>
 <td align="center">0.05822</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9962</td>
 <td align="center">0.3659</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">0.9961</td>
 <td align="center">0.3059</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">0.9843</td>
 <td align="center">0.00011</td>
 <td align="center">rrs</td>
@@ -2161,9 +2110,6 @@ ROBUST ANOVA
 -   Two-way robust factorial ANOVA on M-estimator
 -   pkg WRS2
 
-Recovery
---------
-
 ``` r
 robustANOVA <- function(df, resp_var, factores, 
          alpha, nboot, treshold) {
@@ -2187,6 +2133,8 @@ robustANOVA <- function(df, resp_var, factores,
   
   # Produce Huber M-estimators and confidence intervals by group
   mest <- groupwiseHuber(formulaFull, data = df, ci.type = 'wald', conf.level = alpha)
+  mest_a <- groupwiseHuber(formula_A, data = df, ci.type = 'wald', conf.level = alpha)
+  mest_b <- groupwiseHuber(formula_B, data = df, ci.type = 'wald', conf.level = alpha)
 
   # Two-way robust analysis 
   x <- pbad2way(formulaFull, data = df, est = "mom", nboot = nboot) 
@@ -2201,6 +2149,7 @@ robustANOVA <- function(df, resp_var, factores,
   ## factor A
   pha <- pairwiseRobustTest(formula_A, data = df, est = "mom", 
                             nboot = nboot, method="bonferroni")
+  
   ## factor B
   phb <- pairwiseRobustTest(formula_B, data = df, est = "mom", 
                             nboot = nboot, method="bonferroni")
@@ -2225,12 +2174,15 @@ robustANOVA <- function(df, resp_var, factores,
   
   out <- list()  
   out$mest <- mest # Huber M-estimators and Confidence Intervals
+  out$mest_a <- mest_a
+  out$mest_b <- mest_b
   out$ra <- out_ra # Output for Two-way robust analysis (M-estimators)
   out$letters_ph <- letters_ph # Letters comparison posthoc
   out$ph <- ph # posthoc comparison usinng pairwiseRobustTest 
   
   print(out_ra)
   print(phRWS2)
+  
   return(out)
 }
 ```
@@ -2261,14 +2213,14 @@ rars <- robustANOVA(df=evires, resp_var='rs', factores=factores,
     ##                term    p_value
     ## 1      disturb_year 0.00000000
     ## 2              site 0.00000000
-    ## 3 disturb_year:site 0.04566667
+    ## 3 disturb_year:site 0.04233333
     ## Call:
     ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
     ## 
     ##                       psihat ci.lower ci.upper p-value
-    ## disturb_year1       -0.07125 -0.07959 -0.06309   0.000
-    ## site1               -0.02635 -0.03447 -0.01842   0.000
-    ## disturb_year1:site1  0.01036  0.00252  0.01934   0.018
+    ## disturb_year1       -0.07125 -0.07969 -0.06312 0.00000
+    ## site1               -0.02635 -0.03483 -0.01823 0.00000
+    ## disturb_year1:site1  0.01036  0.00288  0.01883 0.01533
 
 ``` r
 rarc <- robustANOVA(df=evires, resp_var='rc', factores=factores,
@@ -2297,9 +2249,9 @@ rarc <- robustANOVA(df=evires, resp_var='rc', factores=factores,
     ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
     ## 
     ##                      psihat ci.lower ci.upper p-value
-    ## disturb_year1       0.12129  0.11104  0.13330       0
-    ## site1               0.07067  0.05817  0.08093       0
-    ## disturb_year1:site1 0.13400  0.12262  0.14560       0
+    ## disturb_year1       0.12129  0.11084  0.13365       0
+    ## site1               0.07067  0.05859  0.08139       0
+    ## disturb_year1:site1 0.13400  0.12265  0.14542       0
 
 ``` r
 rart <- robustANOVA(df=evires, resp_var='rt', factores=factores,
@@ -2328,9 +2280,9 @@ rart <- robustANOVA(df=evires, resp_var='rt', factores=factores,
     ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
     ## 
     ##                       psihat ci.lower ci.upper p-value
-    ## disturb_year1       -0.16567 -0.17500 -0.15629       0
-    ## site1               -0.07410 -0.08261 -0.06417       0
-    ## disturb_year1:site1 -0.09022 -0.09979 -0.08087       0
+    ## disturb_year1       -0.16567 -0.17501 -0.15600       0
+    ## site1               -0.07410 -0.08254 -0.06391       0
+    ## disturb_year1:site1 -0.09022 -0.09926 -0.08073       0
 
 ``` r
 rarrs <- robustANOVA(df=evires, resp_var='rrs', factores=factores,
@@ -2359,9 +2311,9 @@ rarrs <- robustANOVA(df=evires, resp_var='rrs', factores=factores,
     ## mcp2a(formula = formulaFull, data = df, est = "mom", nboot = nboot)
     ## 
     ##                      psihat ci.lower ci.upper p-value
-    ## disturb_year1       0.09017  0.07964  0.09942       0
-    ## site1               0.04760  0.03856  0.05750       0
-    ## disturb_year1:site1 0.10647  0.09718  0.11565       0
+    ## disturb_year1       0.09017  0.08039  0.09928       0
+    ## site1               0.04760  0.03805  0.05745       0
+    ## disturb_year1:site1 0.10647  0.09725  0.11628       0
 
 ### Estimadores de huber
 
@@ -2375,10 +2327,10 @@ mhuber <- rbind(rarc$mest, rart$mest, rars$mest, rarrs$mest)
 mhuber %>% pander()
 ```
 
-<table style="width:99%;">
+<table style="width:88%;">
 <colgroup>
 <col width="20%" />
-<col width="20%" />
+<col width="9%" />
 <col width="5%" />
 <col width="13%" />
 <col width="15%" />
@@ -2399,7 +2351,7 @@ mhuber %>% pander()
 <tbody>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">1.169</td>
 <td align="center">1.161</td>
@@ -2408,7 +2360,7 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">1.066</td>
 <td align="center">1.058</td>
@@ -2417,7 +2369,7 @@ mhuber %>% pander()
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">1.042</td>
 <td align="center">1.036</td>
@@ -2426,7 +2378,7 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">1.071</td>
 <td align="center">1.067</td>
@@ -2435,7 +2387,7 @@ mhuber %>% pander()
 </tr>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">0.819</td>
 <td align="center">0.8137</td>
@@ -2444,7 +2396,7 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">0.9016</td>
 <td align="center">0.8958</td>
@@ -2453,7 +2405,7 @@ mhuber %>% pander()
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">0.9472</td>
 <td align="center">0.9423</td>
@@ -2462,7 +2414,7 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">0.9387</td>
 <td align="center">0.9336</td>
@@ -2471,7 +2423,7 @@ mhuber %>% pander()
 </tr>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">0.9553</td>
 <td align="center">0.9507</td>
@@ -2480,7 +2432,7 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">0.9618</td>
 <td align="center">0.9573</td>
@@ -2489,7 +2441,7 @@ mhuber %>% pander()
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">0.9855</td>
 <td align="center">0.9805</td>
@@ -2498,7 +2450,7 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">1.004</td>
 <td align="center">0.9996</td>
@@ -2507,7 +2459,7 @@ mhuber %>% pander()
 </tr>
 <tr class="odd">
 <td align="center">2005</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">0.1362</td>
 <td align="center">0.1304</td>
@@ -2516,7 +2468,7 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2005</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">0.05819</td>
 <td align="center">0.05141</td>
@@ -2525,7 +2477,7 @@ mhuber %>% pander()
 </tr>
 <tr class="odd">
 <td align="center">2012</td>
-<td align="center">Northern slope</td>
+<td align="center">N</td>
 <td align="center">471</td>
 <td align="center">0.03883</td>
 <td align="center">0.03396</td>
@@ -2534,11 +2486,205 @@ mhuber %>% pander()
 </tr>
 <tr class="even">
 <td align="center">2012</td>
-<td align="center">Southern slope</td>
+<td align="center">S</td>
 <td align="center">441</td>
 <td align="center">0.06618</td>
 <td align="center">0.06291</td>
 <td align="center">0.06946</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+rars$mest_a$var <- 'rs'
+rarc$mest_a$var <- 'rc'
+rart$mest_a$var <- 'rt'
+rarrs$mest_a$var <- 'rrs'
+
+mhuber_a <- rbind(rarc$mest_a, rart$mest_a, rars$mest_a, rarrs$mest_a)
+mhuber_a %>% pander()
+```
+
+<table style="width:78%;">
+<colgroup>
+<col width="20%" />
+<col width="5%" />
+<col width="13%" />
+<col width="15%" />
+<col width="15%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">disturb_year</th>
+<th align="center">n</th>
+<th align="center">M.Huber</th>
+<th align="center">lower.ci</th>
+<th align="center">upper.ci</th>
+<th align="center">var</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">912</td>
+<td align="center">1.12</td>
+<td align="center">1.113</td>
+<td align="center">1.126</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">912</td>
+<td align="center">1.057</td>
+<td align="center">1.054</td>
+<td align="center">1.06</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">912</td>
+<td align="center">0.8584</td>
+<td align="center">0.8535</td>
+<td align="center">0.8633</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">912</td>
+<td align="center">0.9431</td>
+<td align="center">0.9396</td>
+<td align="center">0.9466</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">912</td>
+<td align="center">0.9585</td>
+<td align="center">0.9553</td>
+<td align="center">0.9617</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">912</td>
+<td align="center">0.9947</td>
+<td align="center">0.9913</td>
+<td align="center">0.998</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">2005</td>
+<td align="center">912</td>
+<td align="center">0.09993</td>
+<td align="center">0.09479</td>
+<td align="center">0.1051</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">2012</td>
+<td align="center">912</td>
+<td align="center">0.05326</td>
+<td align="center">0.05022</td>
+<td align="center">0.05631</td>
+<td align="center">rrs</td>
+</tr>
+</tbody>
+</table>
+
+``` r
+rars$mest_b$var <- 'rs'
+rarc$mest_b$var <- 'rc'
+rart$mest_b$var <- 'rt'
+rarrs$mest_b$var <- 'rrs'
+
+mhuber_b <- rbind(rarc$mest_b, rart$mest_b, rars$mest_b, rarrs$mest_b)
+mhuber_b %>% pander()
+```
+
+<table style="width:67%;">
+<colgroup>
+<col width="9%" />
+<col width="5%" />
+<col width="13%" />
+<col width="15%" />
+<col width="15%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">site</th>
+<th align="center">n</th>
+<th align="center">M.Huber</th>
+<th align="center">lower.ci</th>
+<th align="center">upper.ci</th>
+<th align="center">var</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">N</td>
+<td align="center">942</td>
+<td align="center">1.102</td>
+<td align="center">1.096</td>
+<td align="center">1.108</td>
+<td align="center">rc</td>
+</tr>
+<tr class="even">
+<td align="center">S</td>
+<td align="center">882</td>
+<td align="center">1.069</td>
+<td align="center">1.065</td>
+<td align="center">1.073</td>
+<td align="center">rc</td>
+</tr>
+<tr class="odd">
+<td align="center">N</td>
+<td align="center">942</td>
+<td align="center">0.8835</td>
+<td align="center">0.8777</td>
+<td align="center">0.8893</td>
+<td align="center">rt</td>
+</tr>
+<tr class="even">
+<td align="center">S</td>
+<td align="center">882</td>
+<td align="center">0.9207</td>
+<td align="center">0.9167</td>
+<td align="center">0.9246</td>
+<td align="center">rt</td>
+</tr>
+<tr class="odd">
+<td align="center">N</td>
+<td align="center">942</td>
+<td align="center">0.9701</td>
+<td align="center">0.9666</td>
+<td align="center">0.9737</td>
+<td align="center">rs</td>
+</tr>
+<tr class="even">
+<td align="center">S</td>
+<td align="center">882</td>
+<td align="center">0.983</td>
+<td align="center">0.9797</td>
+<td align="center">0.9864</td>
+<td align="center">rs</td>
+</tr>
+<tr class="odd">
+<td align="center">N</td>
+<td align="center">942</td>
+<td align="center">0.08662</td>
+<td align="center">0.08157</td>
+<td align="center">0.09167</td>
+<td align="center">rrs</td>
+</tr>
+<tr class="even">
+<td align="center">S</td>
+<td align="center">882</td>
+<td align="center">0.06303</td>
+<td align="center">0.05965</td>
+<td align="center">0.06641</td>
 <td align="center">rrs</td>
 </tr>
 </tbody>
@@ -2556,9 +2702,9 @@ pairwise <- rbind(rarc$ph, rart$ph, rars$ph, rarrs$ph)
 pairwise %>% pander()
 ```
 
-<table style="width:89%;">
+<table style="width:81%;">
 <colgroup>
-<col width="36%" />
+<col width="27%" />
 <col width="16%" />
 <col width="13%" />
 <col width="15%" />
@@ -2582,51 +2728,51 @@ pairwise %>% pander()
 <td align="center">rc</td>
 </tr>
 <tr class="even">
-<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">N - S = 0</td>
 <td align="center">0.03308</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">2005.N - 2012.N = 0</td>
 <td align="center">0.1276</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2005.N - 2005.S = 0</td>
 <td align="center">0.1023</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.N - 2012.S = 0</td>
 <td align="center">0.09598</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="even">
-<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2012.N - 2005.S = 0</td>
 <td align="center">-0.02531</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="odd">
-<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2012.N - 2012.S = 0</td>
 <td align="center">-0.03167</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rc</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.S - 2012.S = 0</td>
 <td align="center">-0.006357</td>
-<td align="center">0.2233</td>
+<td align="center">0.224</td>
 <td align="center">1</td>
 <td align="center">rc</td>
 </tr>
@@ -2638,49 +2784,49 @@ pairwise %>% pander()
 <td align="center">rt</td>
 </tr>
 <tr class="even">
-<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">N - S = 0</td>
 <td align="center">-0.03784</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rt</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">2005.N - 2012.N = 0</td>
 <td align="center">-0.1279</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rt</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2005.N - 2005.S = 0</td>
 <td align="center">-0.08216</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rt</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.N - 2012.S = 0</td>
 <td align="center">-0.1199</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rt</td>
 </tr>
 <tr class="even">
-<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2012.N - 2005.S = 0</td>
 <td align="center">0.04579</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rt</td>
 </tr>
 <tr class="odd">
-<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2012.N - 2012.S = 0</td>
 <td align="center">0.008059</td>
-<td align="center">0.03267</td>
-<td align="center">0.196</td>
+<td align="center">0.02333</td>
+<td align="center">0.14</td>
 <td align="center">rt</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.S - 2012.S = 0</td>
 <td align="center">-0.03773</td>
 <td align="center">0</td>
 <td align="center">0</td>
@@ -2694,49 +2840,49 @@ pairwise %>% pander()
 <td align="center">rs</td>
 </tr>
 <tr class="even">
-<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">N - S = 0</td>
 <td align="center">-0.01344</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rs</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">2005.N - 2012.N = 0</td>
 <td align="center">-0.03045</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rs</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2005.N - 2005.S = 0</td>
 <td align="center">-0.007997</td>
-<td align="center">0.026</td>
-<td align="center">0.156</td>
+<td align="center">0.03467</td>
+<td align="center">0.208</td>
 <td align="center">rs</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.N - 2012.S = 0</td>
 <td align="center">-0.0488</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rs</td>
 </tr>
 <tr class="even">
-<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2012.N - 2005.S = 0</td>
 <td align="center">0.02245</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rs</td>
 </tr>
 <tr class="odd">
-<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2012.N - 2012.S = 0</td>
 <td align="center">-0.01835</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rs</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.S - 2012.S = 0</td>
 <td align="center">-0.0408</td>
 <td align="center">0</td>
 <td align="center">0</td>
@@ -2750,52 +2896,52 @@ pairwise %>% pander()
 <td align="center">rrs</td>
 </tr>
 <tr class="even">
-<td align="center">Northern slope - Southern slope = 0</td>
+<td align="center">N - S = 0</td>
 <td align="center">0.02191</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Northern slope = 0</td>
+<td align="center">2005.N - 2012.N = 0</td>
 <td align="center">0.09832</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2005.N - 2005.S = 0</td>
 <td align="center">0.07703</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="odd">
-<td align="center">2005.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.N - 2012.S = 0</td>
 <td align="center">0.06889</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="even">
-<td align="center">2012.Northern slope - 2005.Southern slope = 0</td>
+<td align="center">2012.N - 2005.S = 0</td>
 <td align="center">-0.02129</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="odd">
-<td align="center">2012.Northern slope - 2012.Southern slope = 0</td>
+<td align="center">2012.N - 2012.S = 0</td>
 <td align="center">-0.02943</td>
 <td align="center">0</td>
 <td align="center">0</td>
 <td align="center">rrs</td>
 </tr>
 <tr class="even">
-<td align="center">2005.Southern slope - 2012.Southern slope = 0</td>
+<td align="center">2005.S - 2012.S = 0</td>
 <td align="center">-0.008148</td>
-<td align="center">0.03067</td>
-<td align="center">0.184</td>
+<td align="center">0.03667</td>
+<td align="center">0.22</td>
 <td align="center">rrs</td>
 </tr>
 </tbody>
@@ -2837,7 +2983,7 @@ robust_plot_evi_drought <- ggplot(mhuber, aes(x=disturb_year, y=M.Huber, color =
 robust_plot_evi_drought 
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-64-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-66-1.png" style="display: block; margin: auto;" />
 
 ``` r
 pdf(paste0(di, '/images/resilience/robust_plot_evi_drought.pdf'), width=9, height = 9)
@@ -2876,7 +3022,7 @@ robust_plot_evi_site <- ggplot(mhuber, aes(x=site, y=M.Huber, color = disturb_ye
 robust_plot_evi_site 
 ```
 
-<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-65-1.png" style="display: block; margin: auto;" />
+<img src="explore_resilience_files/figure-markdown_github/unnamed-chunk-67-1.png" style="display: block; margin: auto;" />
 
 ``` r
 pdf(paste0(di, '/images/resilience/robust_plot_evi_site.pdf'), width=9, height = 9)
@@ -2890,5 +3036,8 @@ dev.off()
 ``` r
 # Export data 
 write.csv(mhuber, file=paste0(di, '/out/anovas_resilience/robust_mhuber.csv'), row.names = F)
+write.csv(mhuber_a, file=paste0(di, '/out/anovas_resilience/robust_mhuber_a.csv'), row.names = F)
+write.csv(mhuber_b, file=paste0(di, '/out/anovas_resilience/robust_mhuber_b.csv'), row.names = F)
+
 write.csv(pairwise, file=paste0(di, '/out/anovas_resilience/robust_pairwise.csv'), row.names = F)
 ```
