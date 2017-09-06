@@ -32,6 +32,8 @@ library('WRS2')
 library('car')
 library('MASS')
 library('rcompanion')
+library('devtools')
+devtools::install_github("ajpelu/auxiliar")
 ```
 
 # Prepare data 
@@ -517,50 +519,41 @@ pander(gm)
 
 * Explorar si se cumplen los supuestos de normalidad y homocedasticidad. Tenemos que comprobar que cada uno de los grupos son normales (2005 vs 2012; N vs S; e interactions)
 
-```{r}
-shapirosNormal <- function(df, resp_var, factor_vars) { 
-  out <- df %>% 
-    group_by_(.dots=factor_vars) %>% 
-    summarise(statistic = round(shapiro.test(!!resp_var)$statistic,5),
-              p_value = round(shapiro.test(!!resp_var)$p.value,5)) %>% data.frame()
-  return(out)
-}
-```
-
 ## Normalidad 
 
 ```{r}
+# See auxiliar::shapirosNormal
 ### Resilience 
-nrsA <- shapirosNormal(evires, resp_var = quo(rs), 'disturb_year')
+nrsA<- shapirosNormal(evires, resp_var = rs, 'disturb_year')
 nrsA$var <- 'rs'
-nrsB <- shapirosNormal(evires, resp_var = quo(rs), 'site') 
+nrsB <- shapirosNormal(evires, resp_var = rs, 'site') 
 nrsB$var <- 'rs'
-nrsAB <- shapirosNormal(evires, resp_var = quo(rs), c('disturb_year','site'))
+nrsAB <- shapirosNormal(evires, resp_var = rs, c('disturb_year','site'))
 nrsAB$var <- 'rs'
 
 ### Recovery
-nrcA <- shapirosNormal(evires, resp_var = quo(rc), 'disturb_year')
+nrcA <- shapirosNormal(evires, resp_var = rc, 'disturb_year')
 nrcA$var <- 'rc'
-nrcB <- shapirosNormal(evires, resp_var = quo(rc), 'site') 
+nrcB <- shapirosNormal(evires, resp_var = rc, 'site') 
 nrcB$var <- 'rc'
-nrcAB <- shapirosNormal(evires, resp_var = quo(rc), c('disturb_year','site'))
+nrcAB <- shapirosNormal(evires, resp_var = rc, c('disturb_year','site'))
 nrcAB$var <- 'rc'
 
 ### Resistance
-nrtA <- shapirosNormal(evires, resp_var = quo(rt), 'disturb_year')
+nrtA <- shapirosNormal(evires, resp_var = rt, 'disturb_year')
 nrtA$var <- 'rt'
-nrtB <- shapirosNormal(evires, resp_var = quo(rt), 'site') 
+nrtB <- shapirosNormal(evires, resp_var = rt, 'site') 
 nrtB$var <- 'rt'
-nrtAB <- shapirosNormal(evires, resp_var = quo(rt), c('disturb_year','site'))
+nrtAB <- shapirosNormal(evires, resp_var = rt, c('disturb_year','site'))
 nrtAB$var <- 'rt'
 
 
 ### Relative Resilience 
-nrrsA <- shapirosNormal(evires, resp_var = quo(rrs), 'disturb_year')
+nrrsA <- shapirosNormal(evires, resp_var = rrs, 'disturb_year')
 nrrsA$var <- 'rrs'
-nrrsB <- shapirosNormal(evires, resp_var = quo(rrs), 'site') 
+nrrsB <- shapirosNormal(evires, resp_var = rrs, 'site') 
 nrrsB$var <- 'rrs'
-nrrsAB <- shapirosNormal(evires, resp_var = quo(rrs), c('disturb_year','site'))
+nrrsAB <- shapirosNormal(evires, resp_var = rrs, c('disturb_year','site'))
 nrrsAB$var <- 'rrs'
 ```
 
@@ -598,33 +591,8 @@ write.csv(normtestAB,
 ## Heterocedasticidad 
 
 ```{r}
-homogetest <- function(resp_var, factores, df){ 
-  require(car)
+## See auxiliar::homogetest
 
-  out_factores <- c() 
-  
-  for (f in factores){
-    hv <- c() 
-    myformula <- as.formula(paste0(resp_var, "~", f))
-    #tests 
-    fk <- fligner.test(myformula, data = df)
-    lv <- leveneTest(myformula, data = df) 
-    # out 
-    hv$fk_stat <- round(fk$statistic,3)
-    hv$fk_pvalue <- round(fk$p.value,7)
-    hv$lev_stat <- round(lv$`F value`[1],3)
-    hv$lev_pvalue <- round(lv$`Pr(>F)`[1],7)
-    hv$factor <- f
-    hv <- as.data.frame(hv) 
-    row.names(hv) <- NULL
-    
-    out_factores <- rbind(out_factores, hv)}
-  return(out_factores)
-  
-}
-```
-
-```{r}
 factores <- c('disturb_year', 'site', 'interaction(disturb_year, site)') 
 responses <- c('rs', 'rc', 'rt', 'rrs')
 homo <- c() 
@@ -976,34 +944,3 @@ write.csv(mhuber_b, file=paste0(di, '/out/anovas_resilience/robust_mhuber_b.csv'
 
 write.csv(pairwise, file=paste0(di, '/out/anovas_resilience/robust_pairwise.csv'), row.names = F)
 ```
-
-### GLM approach 
-
-```{r}
-
-m <- glm(rs~disturb_year*site, family='Gamma',data = evires)
-print(summary(m), signif.stars = FALSE, digits=2)
-
-Anova(m, "II")
-
-
-anova(m)
-library(multcomp)
-summary(glht(m, mcp(site="Tukey")))
-summary(glht(m, mcp(disturb_year="Tukey")))
-
-
-
-
-anova(glm_rs)
-e1 <- resid(glm_rs, type = 'pearson')
-n <- nrow(evires)
-p <- length(coef(glm_rs))
-sum(e1^2) / (n -p)
-
-```
-
-
-
-
-
