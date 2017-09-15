@@ -33,7 +33,7 @@ library('car')
 library('MASS')
 library('rcompanion')
 library('devtools')
-devtools::install_github("ajpelu/auxiliar")
+# devtools::install_github("ajpelu/auxiliar")
 ```
 
 # Prepare data 
@@ -517,6 +517,44 @@ pander(gm)
 
 # Asumptions 
 
+
+```{r}
+shapirosNormal <- function(df, resp_var, factor_vars) {
+  rv <- enquo(resp_var)
+  out <- df %>%
+    group_by_(.dots=factor_vars) %>%
+    summarise(statistic = round(shapiro.test(!!rv)$statistic,5),
+              p_value = round(shapiro.test(!!rv)$p.value,5)) %>%
+    data.frame()
+
+  return(out)
+}
+
+homogetest <- function(resp_var, factores, df){
+
+  out_factores <- c()
+
+  for (f in factores){
+    hv <- c()
+    myformula <- as.formula(paste0(resp_var, "~", f))
+    #tests
+    fk <- fligner.test(myformula, data = df)
+    lv <- leveneTest(myformula, data = df)
+    # out
+    hv$fk_stat <- fk$statistic
+    hv$fk_pvalue <- fk$p.value
+    hv$lev_stat <- lv$`F value`[1]
+    hv$lev_pvalue <- lv$`Pr(>F)`[1]
+    hv$factor <- f
+    hv <- as.data.frame(hv)
+    row.names(hv) <- NULL
+
+    out_factores <- rbind(out_factores, hv)}
+  return(out_factores)
+
+}
+```
+
 * Explorar si se cumplen los supuestos de normalidad y homocedasticidad. Tenemos que comprobar que cada uno de los grupos son normales (2005 vs 2012; N vs S; e interactions)
 
 ## Normalidad 
@@ -760,17 +798,6 @@ robustANOVA <- function(df, resp_var, factores,
   ## interaction effect (AB)
   phab <- pairwiseRobustTest(formula_AB, data = df, est = "mom", 
                             nboot = nboot, method="bonferroni")
-  ## letters
-  letters_ph <- rbind(
-    cldList(comparison = pha$Comparison,
-        p.value    = pha$p.adjust,
-        threshold  = treshold),
-    cldList(comparison = phb$Comparison,
-        p.value    = phb$p.adjust,
-        threshold  = treshold), 
-    cldList(comparison = phab$Comparison,
-        p.value    = phab$p.adjust,
-        threshold  = treshold))
   
   ph <- rbind(pha, phb, phab)
   
@@ -781,8 +808,11 @@ robustANOVA <- function(df, resp_var, factores,
   out$mest_a <- mest_a
   out$mest_b <- mest_b
   out$ra <- out_ra # Output for Two-way robust analysis (M-estimators)
-  out$letters_ph <- letters_ph # Letters comparison posthoc
   out$ph <- ph # posthoc comparison usinng pairwiseRobustTest 
+  out$pha <- pha
+  out$phb <- phb
+  out$phab <- phab
+
   
   print(out_ra)
   print(phRWS2)
@@ -801,21 +831,89 @@ rars <- robustANOVA(df=evires, resp_var='rs', factores=factores,
               alpha = 0.95, nboot = 3000, treshold = 0.01)
 ```
 
+#### Rs Letters 
+```{r}
+x <-rars
+
+letraArs <- cldList(comparison = x$pha$Comparison, p.value = x$pha$p.adjust, threshold  = 0.01) %>% mutate(var ='rs')
+letraArs 
+
+letraBrs <- cldList(comparison = x$phb$Comparison, p.value = x$phb$p.adjust, threshold  = 0.01) %>% mutate(var ='rs')
+letraBrs 
+
+letraABrs  <- cldList(comparison = x$phab$Comparison, p.value = x$phab$p.adjust, threshold  = 0.01) %>% mutate(var ='rs')
+letraABrs  
+
+```
+
 ```{r}
 rarc <- robustANOVA(df=evires, resp_var='rc', factores=factores,
               alpha = 0.95, nboot = 3000, treshold = 0.01)
 ```
+
+#### Rc Letters 
+```{r}
+x <-rarc
+
+letraArc <- cldList(comparison = x$pha$Comparison, p.value = x$pha$p.adjust, threshold  = 0.01) %>% mutate(var ='rc')
+letraArc
+letraBrc <- cldList(comparison = x$phb$Comparison, p.value = x$phb$p.adjust, threshold  = 0.01) %>% mutate(var ='rc')
+letraBrc
+letraABrc <- cldList(comparison = x$phab$Comparison, p.value = x$phab$p.adjust, threshold  = 0.01) %>% mutate(var ='rc')
+letraABrc 
+
+```
+
 
 ```{r}
 rart <- robustANOVA(df=evires, resp_var='rt', factores=factores,
               alpha = 0.95, nboot = 3000, treshold = 0.01)
 ```
 
+#### Rt Letters 
+```{r}
+x <-rart
+
+letraArt <- cldList(comparison = x$pha$Comparison, p.value = x$pha$p.adjust, threshold  = 0.01) %>% mutate(var ='rt')
+letraArt 
+letraBrt <- cldList(comparison = x$phb$Comparison, p.value = x$phb$p.adjust, threshold  = 0.01) %>% mutate(var ='rt')
+letraBrt
+letraABrt <- cldList(comparison = x$phab$Comparison, p.value = x$phab$p.adjust, threshold  = 0.01) %>% mutate(var ='rt')
+letraABrt 
+```
+
+
 ```{r}
 rarrs <- robustANOVA(df=evires, resp_var='rrs', factores=factores,
               alpha = 0.95, nboot = 3000, treshold = 0.01)
 ```
 
+```{r}
+x <-rarrs
+
+letraArrs <- cldList(comparison = x$pha$Comparison, p.value = x$pha$p.adjust, threshold  = 0.01) %>% mutate(var ='rrs')
+letraArrs
+letraBrrs <- cldList(comparison = x$phb$Comparison, p.value = x$phb$p.adjust, threshold  = 0.01) %>% mutate(var ='rrs')
+letraBrrs
+letraABrrs <- cldList(comparison = x$phab$Comparison, p.value = x$phab$p.adjust, threshold  = 0.01) %>% mutate(var ='rrs')
+letraABrrs 
+```
+
+```{r}
+letrasA <- rbind(letraArs, letraArc, letraArt, letraArrs) %>% 
+  mutate(disturb_year = 
+           case_when(Group == "25" ~ "2005",
+                     Group == "212" ~ "2012")) %>% 
+  dplyr::select(-Group)
+
+letrasB <- rbind(letraBrs, letraBrc, letraBrt, letraBrrs) %>% rename(site = Group)
+
+letrasAB <- rbind(letraABrs, letraABrc, letraABrt, letraABrrs) %>% 
+  separate(Group, into=c('disturb_year', 'site')) %>% 
+  mutate(disturb_year = 
+           case_when(disturb_year == "25" ~ "2005",
+                     disturb_year == "212" ~ "2012"))
+```
 
 
 ### Estimadores de huber 
@@ -826,7 +924,21 @@ rart$mest$var <- 'rt'
 rarrs$mest$var <- 'rrs'
 
 mhuber <- rbind(rarc$mest, rart$mest, rars$mest, rarrs$mest)
-mhuber %>% pander()
+
+# add letras 
+mhuber <- mhuber %>% inner_join(letrasAB, by=c('var','disturb_year', 'site'))
+
+mhuber_agg <- mhuber %>% 
+  mutate(M.Huber = round(M.Huber, 4),
+         lower.ci = round(lower.ci, 4),
+         upper.ci = round(upper.ci, 4)) %>% 
+  unite_("ci", c("lower.ci", "upper.ci"), sep=",") %>% 
+  mutate(ci = paste0('(', ci, ')')) %>% 
+  dplyr::select(-MonoLetter) %>% 
+  dplyr::select(var, disturb_year:ci, Letter) %>% as.data.frame()
+
+mhuber_agg %>% pander() 
+
 ```
 
 ```{r}
@@ -836,7 +948,19 @@ rart$mest_a$var <- 'rt'
 rarrs$mest_a$var <- 'rrs'
 
 mhuber_a <- rbind(rarc$mest_a, rart$mest_a, rars$mest_a, rarrs$mest_a)
-mhuber_a %>% pander()
+mhuber_a <- mhuber_a %>% inner_join(letrasA, by=c('var','disturb_year'))
+
+
+mhuber_agg_a <- mhuber_a %>% 
+  mutate(M.Huber = round(M.Huber, 4),
+         lower.ci = round(lower.ci, 4),
+         upper.ci = round(upper.ci, 4)) %>% 
+  unite_("ci", c("lower.ci", "upper.ci"), sep=",") %>% 
+  mutate(ci = paste0('(', ci, ')')) %>% 
+  dplyr::select(-MonoLetter) %>% 
+  dplyr::select(var, disturb_year:ci, Letter) %>% as.data.frame()
+
+mhuber_agg_a %>% pander() 
 ```
 
 ```{r}
@@ -846,7 +970,18 @@ rart$mest_b$var <- 'rt'
 rarrs$mest_b$var <- 'rrs'
 
 mhuber_b <- rbind(rarc$mest_b, rart$mest_b, rars$mest_b, rarrs$mest_b)
-mhuber_b %>% pander()
+mhuber_b <- mhuber_b %>% inner_join(letrasB, by=c('var','site'))
+
+mhuber_agg_b <- mhuber_b %>% 
+  mutate(M.Huber = round(M.Huber, 4),
+         lower.ci = round(lower.ci, 4),
+         upper.ci = round(upper.ci, 4)) %>% 
+  unite_("ci", c("lower.ci", "upper.ci"), sep=",") %>% 
+  mutate(ci = paste0('(', ci, ')')) %>% 
+  dplyr::select(-MonoLetter) %>% 
+  dplyr::select(var, site:ci, Letter) %>% as.data.frame()
+
+mhuber_agg_b %>% pander()
 ```
 
 
@@ -939,8 +1074,11 @@ dev.off()
 ```{r}
 # Export data 
 write.csv(mhuber, file=paste0(di, '/out/anovas_resilience/robust_mhuber.csv'), row.names = F)
+write.csv(mhuber_agg, file=paste0(di, '/out/anovas_resilience/robust_mhuber_agg.csv'), row.names = F)
 write.csv(mhuber_a, file=paste0(di, '/out/anovas_resilience/robust_mhuber_a.csv'), row.names = F)
+write.csv(mhuber_agg_a, file=paste0(di, '/out/anovas_resilience/robust_mhuber_agg_a.csv'), row.names = F)
 write.csv(mhuber_b, file=paste0(di, '/out/anovas_resilience/robust_mhuber_b.csv'), row.names = F)
+write.csv(mhuber_agg_b, file=paste0(di, '/out/anovas_resilience/robust_mhuber_agg_b.csv'), row.names = F)
 
 write.csv(pairwise, file=paste0(di, '/out/anovas_resilience/robust_pairwise.csv'), row.names = F)
 ```
